@@ -3,10 +3,13 @@ import datetime
 import json
 from enum import Enum
 import numpy as np
-from kivy.uix.boxlayout import BoxLayout
+import cv2
+import os.path
+from datetime import datetime
 
+# Kivy imports...
+from kivy.uix.boxlayout import BoxLayout
 from kivymd.app import MDApp
-from kivy.uix.floatlayout import FloatLayout
 from kivymd.uix.button import MDFloatingActionButton
 from kivymd.uix.card import MDCard
 from kivymd.uix.label import MDLabel
@@ -17,15 +20,33 @@ from kivymd.uix.fitimage import FitImage
 from kivymd.uix.screenmanager import MDScreenManager
 from kivymd.uix.snackbar import Snackbar
 from kivymd.uix.toolbar.toolbar import MDTopAppBar
-from kivy.properties import (
-    ObjectProperty, StringProperty, ListProperty, BooleanProperty, NumericProperty, OptionProperty)
+from kivy.properties import ObjectProperty, NumericProperty
 from kivy.clock import Clock
 from kivy.core.window import Window
 from kivy.lang import Builder
 from kivy import platform
 from kivy.metrics import dp
-
 from kivy.graphics import Rectangle, Line, Color, Ellipse, InstructionGroup
+
+# blink imports
+import camera_desktop
+from tela_inicial import TelaInicial
+from historico_analises_list import HistoricoAnalises
+from dados_analise_pos_manual import TelaDadosAnalise
+from tela_login import TelaLogin
+from tela_cadastro import TelaCadastro
+from tela_configuracao import TelaConfiguracao
+from dados.modelo import DadoFrame, DadosAnalise
+from sobre import Sobre
+from cadastro_utils import get_storage_path
+
+# from blink import blink_utils as blink
+
+logger = logging.getLogger(__file__)
+logger.setLevel(logging.DEBUG)
+handler = logging.StreamHandler()
+handler.setLevel(logging.DEBUG)
+logger.addHandler(handler)
 
 if platform == "macosx" or platform == "android":
     try:
@@ -37,32 +58,6 @@ if platform == "macosx" or platform == "android":
         import tensorflow as tf
         Interpreter = tf.lite.Interpreter
         load_delegate = tf.lite.experimental.load_delegate
-
-import cv2
-import os.path
-from datetime import datetime
-
-logger = logging.getLogger(__file__)
-logger.setLevel(logging.DEBUG)
-handler = logging.StreamHandler()
-handler.setLevel(logging.DEBUG)
-logger.addHandler(handler)
-
-import camera_desktop
-from tela_inicial import TelaInicial
-# from historico_analises import HistoricoAnalises
-from historico_analises_list import HistoricoAnalises
-# from dados_analise import TelaDadosAnalise
-from dados_analise_pos_manual import TelaDadosAnalise
-from tela_login import TelaLogin
-from tela_cadastro import TelaCadastro
-from tela_configuracao import TelaConfiguracao
-from dados.modelo import DadoFrame, DadosAnalise
-from sobre import Sobre
-
-from cadastro_utils import get_storage_path
-
-# from blink import blink_utils as blink
 
 # Define se usaremos dados reais (dos arquivos json criados nas análises) ou dados "fake" para testes
 REAL_DATA = True
@@ -82,31 +77,17 @@ eyePath = "assets/haarcascade_eye.xml"
 faceCascade = cv2.CascadeClassifier(cascPath)
 eyeCascade = cv2.CascadeClassifier(eyePath)
 
-print('*** arquivo {} existe? {}'.format(cascPath, os.path.isfile(cascPath)))
-print('*** faceCascade está vazio? {}'.format(faceCascade.empty()))
-
 KV = """ 
 <ContentNavigationDrawer>:
     orientation: "vertical"
     padding: "8dp"
     spacing: "8dp"
 
-    #AnchorLayout:
-    #    anchor_x: "left"
-    #    size_hint_y: None
-    #    height: avatar.height
-
     Image:
         #id: avatar
         size_hint: None, None
         size: "56dp", "56dp"
         source: "assets/Blink_Logo_Nome_Fundo_Branco.png"
-
-    #MDLabel:
-    #    text: "Blink"
-    #    font_style: "Button"
-    #    size_hint_y: None
-    #    height: self.texture_size[1]
 
     MDLabel:
         text: "gustavo_bonesso@hotmail.com"
@@ -157,12 +138,13 @@ KV = """
 class ContentNavigationDrawer(BoxLayout):
     main_app = ObjectProperty()
 
-
+"""
 class RootLayout(FloatLayout):
     buttons_visible = BooleanProperty(True)
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+"""
 
 
 class BlinkApp(MDApp):
@@ -335,10 +317,6 @@ class BlinkApp(MDApp):
                         format(input['quantization_parameters']['scales']))
             # logger.info("input_tensor.quantization_parameters: {}".format(input['quantization_parameters']))
 
-        """
-        self.model = TensorFlowModel()
-        self.model.load("assets/talking_300W_50_epoch.tflite")
-        """
 
         self.repositorio_dados = RepositorioDadosAnalise()
 
@@ -366,7 +344,6 @@ class BlinkApp(MDApp):
         logger.info("platform: {}".format(platform))
         if platform == "android":
             self.camera_display_widget = CameraDisplayWidget(
-                # size_hint=(None, None),
                 size_hint_y=None,
                 height=Window.height - app_bar.height - dp(40),
                 width=Window.width,
@@ -390,29 +367,6 @@ class BlinkApp(MDApp):
 
         # screen_01.add_widget(app_bar)
         screen_01.add_widget(self.camera_display_widget)
-
-        """
-        self.label_face = MDLabel(
-            text="Face..."
-        )
-        self.label_left_eye = MDLabel(
-            text="Left...",
-            text_color=(1, 0, 0, 1),
-            outline_color=(1, 0, 0, 1),
-            outline_width=2,
-            # pos_hint=(None, None),
-        )
-        self.label_right_eye = MDLabel(
-            text="Right...",
-            text_color=(0, 1, 0, 1),
-            outline_color=(0, 1, 0, 1),
-            outline_width=2,
-            pos=(0, 0)
-        )
-        screen_01.add_widget(self.label_face)
-        screen_01.add_widget(self.label_left_eye)
-        screen_01.add_widget(self.label_right_eye)
-        """
 
         # Tela inicial
         screen_00 = TelaInicial(
@@ -811,17 +765,6 @@ class BlinkApp(MDApp):
                     self.camera_display_widget.canvas.remove(self.eye_rectangle)
 
         # logger.info("***Updating Canvas...")
-
-    """
-    def teste(self, dt):
-        debug_text = "***{}\n{}\n{}".format(
-            datetime.now(),
-            self.camera_display_widget.size,
-            self.camera_display_widget.texture
-        )
-        #self.root.ids.lbl.text = debug_text
-        #print(debug_text)
-    """
 
     # =========== Define uma Snackbar
     def snackbar_show(self, texto):

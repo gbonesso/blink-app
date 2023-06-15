@@ -1,6 +1,13 @@
-from kivy import platform
+import logging
 import os
 from pathlib import Path
+from kivy import platform
+
+logger = logging.getLogger(__file__)
+logger.setLevel(logging.DEBUG)
+handler = logging.StreamHandler()
+handler.setLevel(logging.DEBUG)
+logger.addHandler(handler)
 
 
 def get_storage_path():
@@ -86,7 +93,7 @@ def login(usuario, senha):
         return "Limite de caracteres para senha excedido"
     else:
         existe, senha_cadastrada = consulta_senha_usuario(usuario)
-        print('existe: {} senha_cadastrada: {} senha: {}'.format(existe, senha_cadastrada.rstrip(), senha))
+        logger.info('existe: {} senha_cadastrada: {} senha: {}'.format(existe, senha_cadastrada.rstrip(), senha))
         if not existe:
             return "Usuário não existe"
         else:
