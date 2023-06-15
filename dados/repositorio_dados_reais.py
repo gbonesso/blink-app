@@ -16,7 +16,7 @@ logger.addHandler(handler)
 class RepositorioDadosAnalise:
 
     def __init__(self):
-        self.lista_analises = [];
+        self.lista_analises = []
         file_folder = os.path.join(get_storage_path(), "json_data")
         if not os.path.isdir(file_folder):
             os.mkdir(file_folder)
@@ -29,7 +29,7 @@ class RepositorioDadosAnalise:
                     dados = json.load(analysis_file)
 
                 logger.info(dados)
-                # print(dados["data_hora_analise"])
+                # logger.info(dados["data_hora_analise"])
 
                 analise = DadosAnalise(
                     data_hora_analise=datetime.strptime(dados['data_hora_analise'], "%d/%m/%Y %H:%M:%S %f"),
@@ -54,4 +54,3 @@ class RepositorioDadosAnalise:
 
     def get_lista_analises(self):
         return self.lista_analises
-

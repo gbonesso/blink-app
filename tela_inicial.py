@@ -48,8 +48,6 @@ class TelaInicial(MDScreen):
             size_hint_x=None,
             width="200dp",
             on_release=self.vai_para_pagina_login,
-            # O padding para botoes é entre o texto do botão e a borda...
-            #padding=("20dp", "20dp", "20dp", "20dp"),
         )
         cadastrar_button = MDFillRoundFlatButton(
             text="Cadastrar",
@@ -58,7 +56,6 @@ class TelaInicial(MDScreen):
             size_hint_x=None,
             width="200dp",
             on_release=self.vai_para_pagina_cadastro,
-            #padding=("20dp", "20dp", "20dp", "20dp"),
         )
         blink_app_name_label = Builder.load_string(kv_blink_app_name_label)
         layout.add_widget(blink_logo)

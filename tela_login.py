@@ -24,7 +24,6 @@ class TelaLogin(MDScreen):
         self.main_app.screen_manager.current = "screen_00"
 
     def login_button_on_release(self, source_button):
-        #self.label_info.text = \
         retorno_login = login(
             self.user_textfield.text,
             self.password_textfield.text,
@@ -36,9 +35,8 @@ class TelaLogin(MDScreen):
 
     def __init__(self, **kwargs):
         super(TelaLogin, self).__init__(**kwargs)
+        # ToDo: Fazer o ajuste com base no tamanho real do AppBar
         layout = MDFloatLayout(
-            #orientation='vertical',
-            #padding=("10dp", "15dp", "10dp", "15dp"),  # LTRB
             pos_hint={"top": 0.9},
         )
         blink_logo = Image(
@@ -54,7 +52,7 @@ class TelaLogin(MDScreen):
             max_text_length=10,
             font_size=24,
             pos_hint={"center_x": 0.5, "center_y": 0.5},
-            size_hint = (0.7, None),
+            size_hint=(0.7, None),
         )
         self.password_textfield = MDTextField(
             mode="round",
@@ -80,8 +78,6 @@ class TelaLogin(MDScreen):
             pos_hint={"center_x": 0.7, "center_y": 0.3},
             size_hint=(0.3, None),
             on_release=self.login_button_on_release,
-            #size_hint_x=0.4,
-            #padding=("20dp", "20dp", "20dp", "20dp"),
         )
         self.label_info = MDLabel(
             text="",

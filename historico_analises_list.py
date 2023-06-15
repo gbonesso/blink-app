@@ -1,13 +1,8 @@
 import logging
 
-from kivy.properties import ObjectProperty, StringProperty
-from kivy.uix.boxlayout import BoxLayout
-from kivymd.uix.boxlayout import MDBoxLayout
-from kivymd.uix.card import MDCard
-from kivymd.uix.label import MDLabel
+from kivy.properties import ObjectProperty
 from kivymd.uix.list import TwoLineListItem, MDList
 from kivymd.uix.screen import MDScreen
-from kivy.lang import Builder
 from kivymd.uix.scrollview import MDScrollView
 
 logger = logging.getLogger(__file__)
@@ -15,18 +10,6 @@ logger.setLevel(logging.DEBUG)
 handler = logging.StreamHandler()
 handler.setLevel(logging.DEBUG)
 logger.addHandler(handler)
-
-"""
-class MD3Card(MDCard):
-    
-    dados_analise = ObjectProperty()
-    main_app = ObjectProperty()
-
-    def card_on_press(self, which_card):
-        print("Card clicado: {}".format(which_card.dados_analise))
-        self.main_app.dados_analise_selecionado = which_card.dados_analise
-        self.main_app.screen_manager.current = "screen_04"
-"""
 
 
 class MinhaTwoLineListItem(TwoLineListItem):
@@ -56,7 +39,6 @@ class HistoricoAnalises(MDScreen):
             do_scroll_y=True,
             do_scroll_x=False,
         )
-        #self.scroll_view.bind(minimum_height=self.scroll_view.setter("height"))
         self.add_widget(self.scroll_view)
 
     def on_pre_enter(self):

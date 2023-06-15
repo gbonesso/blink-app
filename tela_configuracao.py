@@ -154,8 +154,6 @@ class TelaConfiguracao(MDScreen):
             pos_hint={"center_x": 0.7, "center_y": 0.2},
             size_hint=(0.3, None),
             on_release=self.gravar_button_on_release,
-            #size_hint_x=0.4,
-            #padding=("20dp", "20dp", "20dp", "20dp"),
         )
         layout.add_widget(blink_logo)
         layout.add_widget(self.min_eye_size_textfield)

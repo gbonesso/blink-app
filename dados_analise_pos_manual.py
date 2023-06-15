@@ -1,17 +1,9 @@
 import logging
 
-from kivy.properties import ObjectProperty, StringProperty
-from kivy.uix.boxlayout import BoxLayout
-from kivymd.uix.boxlayout import MDBoxLayout
-from kivymd.uix.card import MDCard
-from kivymd.uix.gridlayout import MDGridLayout
+from kivy.properties import ObjectProperty
 from kivymd.uix.label import MDLabel
 from kivymd.uix.screen import MDScreen
-from kivy.lang import Builder
-
-### Kivy Garden - Graph
-from math import sin
-from kivy_garden.graph import Graph, MeshLinePlot, LinePlot
+from kivy_garden.graph import Graph, LinePlot
 
 logger = logging.getLogger(__file__)
 logger.setLevel(logging.DEBUG)
@@ -24,7 +16,6 @@ class TelaDadosAnalise(MDScreen):
     main_app = ObjectProperty()
     right_eye_graph_widget = ObjectProperty()
     left_eye_graph_widget = ObjectProperty()
-    #layout = ObjectProperty()
 
     def __init__(self, **kwargs):
         super(TelaDadosAnalise, self).__init__(**kwargs)
@@ -78,12 +69,9 @@ class TelaDadosAnalise(MDScreen):
         )
         self.add_widget(self.label_frequencia)
 
-
-        #self.add_widget()
-
     # Atualiza a tela com os dados da análise selecionada no histórico...
     def on_pre_enter(self):
-        #print("on_enter...")
+        # logger.info("on_enter...")
         self.label_data_analise.text = "{}".format(
             self.main_app.dados_analise_selecionado.data_hora_analise.strftime("%d/%m/%Y %H:%M")
         )
@@ -113,7 +101,6 @@ class TelaDadosAnalise(MDScreen):
         if self.right_eye_graph_widget is not None:
             self.remove_widget(self.right_eye_graph_widget)
             self.remove_widget(self.left_eye_graph_widget)
-
 
         # Monta o gráfico - Olho direito
         self.right_eye_graph_widget = Graph(
@@ -150,4 +137,3 @@ class TelaDadosAnalise(MDScreen):
         self.add_widget(self.left_eye_graph_widget)
 
         logger.info("duracao análise: {}".format(self.main_app.dados_analise_selecionado.get_duracao()))
-

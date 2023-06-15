@@ -35,8 +35,6 @@ class TelaCadastro(MDScreen):
     def __init__(self, **kwargs):
         super(TelaCadastro, self).__init__(**kwargs)
         layout = MDFloatLayout(
-            #orientation='vertical',
-            #padding=("10dp", "15dp", "10dp", "15dp"),  # LTRB
             pos_hint={"top": 0.9},
         )
         blink_logo = Image(
@@ -52,7 +50,7 @@ class TelaCadastro(MDScreen):
             max_text_length=10,
             font_size=24,
             pos_hint={"center_x": 0.5, "center_y": 0.5},
-            size_hint = (0.7, None),
+            size_hint=(0.7, None),
         )
         self.perfil_medico_switch = MDSwitch(
             pos_hint={"center_x": 0.3, "center_y": 0.4},
@@ -91,8 +89,6 @@ class TelaCadastro(MDScreen):
             pos_hint={"center_x": 0.7, "center_y": 0.2},
             size_hint=(0.3, None),
             on_release=self.cadastrar_button_on_release,
-            #size_hint_x=0.4,
-            #padding=("20dp", "20dp", "20dp", "20dp"),
         )
         self.label_info = MDLabel(
             text="",
