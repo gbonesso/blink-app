@@ -317,7 +317,6 @@ class BlinkApp(MDApp):
                         format(input['quantization_parameters']['scales']))
             # logger.info("input_tensor.quantization_parameters: {}".format(input['quantization_parameters']))
 
-
         self.repositorio_dados = RepositorioDadosAnalise()
 
         if platform == "android":
@@ -648,19 +647,6 @@ class BlinkApp(MDApp):
                     if self.DEBUG_EYES:
                         self.right_eye_label_dbg.text = "Open" if output_tensor[1] > output_tensor[0] else "Closed"
 
-                    """
-                    ey_ajustado = float(img.height / 2 - self.right_eye_rect[3] - self.right_eye_rect[1])
-                    self.label_right_eye.pos = (float(self.right_eye_rect[0]), ey_ajustado)
-                    self.label_right_eye.text = 'ex:{} ey:{}\new:{}, eh:{}\ney_a:{}\n{}'.format(
-                        self.right_eye_rect[0], self.right_eye_rect[1],
-                        self.right_eye_rect[2], self.right_eye_rect[3],
-                        ey_ajustado,
-                        #ex, ey, ew, eh, ey_ajustado,
-                        #"Open" if image_prediction == 0 else "Closed"
-                        teste_tflite_output,
-                    )
-                    """
-
                 # Código repetido, generalizar...
                 if self.left_eye_rect is not None:
                     left_eye_img = pixel_array[
@@ -721,18 +707,6 @@ class BlinkApp(MDApp):
 
                     if self.DEBUG_EYES:
                         self.left_eye_label_dbg.text = "Open" if output_tensor[1] > output_tensor[0] else "Closed"
-                    """
-                    ey_ajustado = float(img.height / 2 - self.left_eye_rect[3] - self.left_eye_rect[1])
-                    self.label_left_eye.pos = (float(self.left_eye_rect[0]), ey_ajustado)
-                    self.label_left_eye.text = 'ex:{} ey:{}\new:{}, eh:{}\ney_a:{}\n{}'.format(
-                        self.left_eye_rect[0], self.left_eye_rect[1],
-                        self.left_eye_rect[2], self.left_eye_rect[3],
-                        ey_ajustado,
-                        #ex, ey, ew, eh, ey_ajustado,
-                        #"Open" if image_prediction == 0 else "Closed"
-                        teste_tflite_output,
-                    )
-                    """
 
         # É possível fazer update no Canvas na camera do Desktop...
         # ToDo: Generalizar para os dois olhos e colocar o retângulo da face
