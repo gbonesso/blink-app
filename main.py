@@ -764,7 +764,7 @@ class BlinkApp(MDApp):
                 elif platform == "android":
                     # Na plataforma Android passa o grupo de instruções para a classe que faz a interface
                     # com a camera, que vai renderizar os retângulos no método _update_preview...
-                    self.camera_display_widget.camera_interface.instruction_group = self.instruction_group
+                    self.camera_display_widget.current_camera.instruction_group = self.instruction_group
 
         # logger.info("***Updating Canvas...")
 

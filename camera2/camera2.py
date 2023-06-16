@@ -128,12 +128,10 @@ class PyCameraInterface(EventDispatcher):
 
         return outputs
 
+
 class PyCameraDevice(EventDispatcher):
-
     camera_id = StringProperty()
-
     output_texture = ObjectProperty(None, allownone=True)
-
     preview_active = BooleanProperty(False)
     preview_texture = ObjectProperty(None, allownone=True)
     preview_resolution = ListProperty()

@@ -86,7 +86,7 @@ class CameraDisplayWidget(StencilView):
 
     def _restart_stream(self, dt):
         # logger.info("On restart, state is {}".format(self.camera_permission_state))
-        self.attempt_stream_camera(self.cameras_to_use[1])
+        self.attempt_stream_camera(self.cameras_to_use[0])
 
     def debug_print_camera_info(self):
         cameras = self.camera_interface.cameras
