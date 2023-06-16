@@ -338,6 +338,7 @@ class PyCameraDevice(EventDispatcher):
         self.java_preview_surface_texture.updateTexImage()  # Update the texture image from the most frame from image stream
         self.preview_fbo.ask_update()
 
+        """
         # Acrescenta instruções de desenho ao frame. Pode ser usado para desenhar
         # os retangulos de detecção de face e olhos
         if self.instruction_group_local is not None:
@@ -355,6 +356,7 @@ class PyCameraDevice(EventDispatcher):
             # self.instruction_group.add(Rotate(angle=-90))
             self.instruction_group_local = self.instruction_group
             self.preview_fbo.add(self.instruction_group_local)
+        """
 
         self.preview_fbo.draw()
 
