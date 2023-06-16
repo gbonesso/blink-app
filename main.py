@@ -551,7 +551,7 @@ class BlinkApp(MDApp):
             logger.info('*** Tempo faceCascade: {} #faces:{} '.format(datetime.now() - begin, len(faces)))
             for (x, y, w, h) in faces:
                 logger.info('*** x:{} y:{}, w:{}, h:{}'.format(x, y, w, h))
-                self.face_rect = (x, y, w, h)
+                self.face_rect = (x, y, w, h/2)  # h/2 -> Elimina a metade da boca...
 
                 # Cria uma imagem recortada somente da face para acelerar o processo de detecção dos olhos
                 face_img_rgba = pixel_array_rgba[
@@ -774,7 +774,7 @@ class BlinkApp(MDApp):
             Line(
                 rectangle=(rect[0], ey_ajustado, rect[2], rect[3]),
                 width=2,
-                group="faces_olhos",
+                # group="faces_olhos",
             )
         )
         # self.eye_rectangle.add(Line(rectangle=(0, 0, 50, 50), width=3))

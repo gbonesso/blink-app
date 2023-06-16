@@ -344,6 +344,14 @@ class PyCameraDevice(EventDispatcher):
             self.preview_fbo.remove(self.instruction_group_local)
 
         if self.instruction_group is not None:
+            texture = Texture.create(size=(200, 200), colorfmt='rgba')
+            self.instruction_group.add(
+                Line(
+                    rectangle=(0, 0, 200, 200),
+                    width=2,
+                    texture=texture,
+                )
+            )
             self.instruction_group_local = self.instruction_group
             self.preview_fbo.add(self.instruction_group_local)
 
