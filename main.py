@@ -20,6 +20,7 @@ from kivymd.uix.fitimage import FitImage
 from kivymd.uix.screenmanager import MDScreenManager
 from kivymd.uix.snackbar import Snackbar
 from kivymd.uix.toolbar.toolbar import MDTopAppBar
+from kivy.uix.widget import Widget
 from kivy.properties import ObjectProperty, NumericProperty
 from kivy.clock import Clock
 from kivy.core.window import Window
@@ -39,6 +40,7 @@ from tela_configuracao import TelaConfiguracao
 from dados.modelo import DadoFrame, DadosAnalise
 from sobre import Sobre
 from cadastro_utils import get_storage_path
+from utils import rotate
 
 # from blink import blink_utils as blink
 
@@ -191,6 +193,7 @@ class BlinkApp(MDApp):
     right_eye_image_dbg = ObjectProperty()
     right_eye_label_dbg = ObjectProperty()
     instruction_group = ObjectProperty()
+    canvas_widget = ObjectProperty()
 
     # Configuração inicial do arquivo "config.ini"
     def build_config(self, config):
@@ -245,12 +248,14 @@ class BlinkApp(MDApp):
             if self.DEBUG_EYES:
                 self.left_eye_image_card.opacity = 1
                 self.right_eye_image_card.opacity = 1
+                self.canvas_widget.opacity = 1
         else:
             self.flip_camera_button.opacity = 0
             self.start_analysis_button.opacity = 0
             if self.DEBUG_EYES:
                 self.left_eye_image_card.opacity = 0
                 self.right_eye_image_card.opacity = 0
+                self.canvas_widget.opacity = 0
 
     def habilita_menu(self):
         self.content_navigation_drawer.ids.novaanalise.disabled = False
@@ -290,6 +295,22 @@ class BlinkApp(MDApp):
         self.left_eye_image_card.add_widget(self.left_eye_label_dbg)
         self.left_eye_image_card.add_widget(self.left_eye_image_dbg)
         self.root.add_widget(self.left_eye_image_card)
+
+        # Widget para sobrepor a imagem e desenhar os retangulos de detecção no cado do Android
+        self.canvas_widget = Widget(
+            pos_hint={"top": 1},
+            size_hint=(1, 1),
+            opacity=0,
+        )
+        """
+        with self.canvas_widget.canvas:
+            Color(1, 0, 0),
+            Line(
+                rectangle=(50, 50, 180, 250),
+                width=2,
+            ),
+        """
+        self.root.add_widget(self.canvas_widget)
 
     def build(self):
         """menu_items = [  # variável usada para configura os itens do menu
@@ -725,8 +746,9 @@ class BlinkApp(MDApp):
         # Desenha os retângulos da face e dos olhos no canvas
         if platform == "macosx" or platform == "android":
             if self.instruction_group is not None:
-                if platform == "macosx":
-                    self.camera_display_widget.canvas.remove(self.instruction_group)
+                # if platform == "macosx":
+                # self.camera_display_widget.canvas.remove(self.instruction_group)
+                self.canvas_widget.canvas.remove(self.instruction_group)
             if self.DEBUG_EYES:
                 self.instruction_group = InstructionGroup()
                 if self.face_rect is not None:
@@ -754,15 +776,18 @@ class BlinkApp(MDApp):
                 # for instruction in self.instruction_group.get_group('my_group'):
                 #    logger.info("Instruction :{}".format(instruction))
 
-                if platform == "macosx":
-                    self.camera_display_widget.canvas.add(self.instruction_group)
+                # if platform == "macosx":
+                # self.camera_display_widget.canvas.add(self.instruction_group)
+                self.canvas_widget.canvas.add(self.instruction_group)
+
+                """
                 elif platform == "android":
                     # Na plataforma Android passa o grupo de instruções para a classe que faz a interface
                     # com a camera, que vai renderizar os retângulos no método _update_preview...
 
                     if self.camera_display_widget.current_camera is not None:
                         self.camera_display_widget.current_camera.instruction_group = self.instruction_group
-
+                """
         # logger.info("***Updating Canvas...")
 
     def create_group_instructions_rect(self, cdw, rect, color):
