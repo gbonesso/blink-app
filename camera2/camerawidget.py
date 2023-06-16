@@ -110,8 +110,8 @@ class CameraDisplayWidget(StencilView):
             Window.size,
             camera.supported_resolutions,
             # best=(1920, 1080)
-            # best=(720, 720)
-            best=(320, 240),
+            best=(720, 720)
+            # best=(320, 240),
         )
         if resolution is None:
             logger.error(f"Found no good resolution in {camera.supported_resolutions} for Window.size {Window.size}")

@@ -348,8 +348,8 @@ class PyCameraDevice(EventDispatcher):
             self.instruction_group.add(
                 Line(
                     rectangle=(0, 0, 200, 200),
-                    width=2,
-                    texture=texture,
+                    width=5,
+                    # texture=texture,
                 )
             )
             self.instruction_group_local = self.instruction_group
