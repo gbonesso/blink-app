@@ -158,6 +158,9 @@ class PyCameraDevice(EventDispatcher):
 
     _open_callback = ObjectProperty(None, allownone=True)
 
+    # Propriedades relacionadas a análise / detecção de face e olhos
+    instruction_group = ObjectProperty()
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.register_event_type("on_opened")
@@ -335,30 +338,12 @@ class PyCameraDevice(EventDispatcher):
         logger.info("*** _update_preview")
         self.java_preview_surface_texture.updateTexImage()  # Update the texture image from the most frame from image stream
         self.preview_fbo.ask_update()
-        ##
-        # with self.preview_fbo:
-        #    Color(0.5, 0.5, 0.5, 0.5)
-        #    Ellipse(pos=(10, 10), size=(200, 200))
-        ##
 
-        if self.eye_rectangle is not None:
-            self.preview_fbo.remove(self.eye_rectangle)
-        self.eye_rectangle = InstructionGroup()
-        self.eye_rectangle.add(Color(1, 0, 0))
-        """
-        self.eye_rectangle.add(
-            Line(
-                rectangle=(
-                    self.left_eye_rect[0], ey_ajustado,  # self.left_eye_rect[1],
-                    self.left_eye_rect[2], self.left_eye_rect[3]
-                ),
-                width=2
-            )
-        )
-        """
-        self.eye_rectangle.add(Line(rectangle=(0, 0, 50, 50), width=3))
-        # self.eye_rectangle.add(Line(rectangle=(0, self.camera_display_widget.height, 50, 50), width=3))
-        self.preview_fbo.add(self.eye_rectangle)
+        # Acrescenta instruções de desenho ao frame. Pode ser usado para desenhar
+        # os retˆ
+        if self.instruction_group is not None:
+            self.preview_fbo.remove(self.instruction_group)
+            self.preview_fbo.add(self.eye_rectangle)
 
         self.preview_fbo.draw()
         self.output_texture = self.preview_fbo.texture
