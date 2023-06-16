@@ -335,7 +335,7 @@ class PyCameraDevice(EventDispatcher):
             Clock.schedule_interval(self._update_preview, 0.)
 
     def _update_preview(self, dt):
-        logger.info("*** _update_preview")
+        logger.info("*** _update_preview - instruction_group: {}".format(self.instruction_group))
         self.java_preview_surface_texture.updateTexImage()  # Update the texture image from the most frame from image stream
         self.preview_fbo.ask_update()
 

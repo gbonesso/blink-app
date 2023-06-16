@@ -567,7 +567,7 @@ class BlinkApp(MDApp):
                     flags=cv2.CASCADE_SCALE_IMAGE,
                 )
 
-                # registra frame
+                # Registra frame
                 if self.analise_iniciada:
                     if self.ultima_analise is not None:
                         dados_frame_atual = DadoFrame(
