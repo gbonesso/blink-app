@@ -340,7 +340,7 @@ class PyCameraDevice(EventDispatcher):
         self.preview_fbo.ask_update()
 
         # Acrescenta instruções de desenho ao frame. Pode ser usado para desenhar
-        # os retˆ
+        # os retangulos de detecção de face e olhos
         if self.instruction_group is not None:
             self.preview_fbo.remove(self.instruction_group)
             self.preview_fbo.add(self.eye_rectangle)
