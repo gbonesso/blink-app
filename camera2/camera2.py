@@ -343,20 +343,22 @@ class PyCameraDevice(EventDispatcher):
         if self.instruction_group_local is not None:
             self.preview_fbo.remove(self.instruction_group_local)
 
+        self.preview_fbo.draw()
+
         if self.instruction_group is not None:
             # texture = Texture.create(size=(200, 200), colorfmt='rgba')
             self.instruction_group.add(
                 Line(
-                    rectangle=(0, 0, 200, 200),
+                    rectangle=(50, 50, 200, 200),
                     width=5,
                     # texture=texture,
                 )
             )
-            self.instruction_group.add(Rotate(angle=-90))
+            # self.instruction_group.add(Rotate(angle=-90))
             self.instruction_group_local = self.instruction_group
             self.preview_fbo.add(self.instruction_group_local)
 
-        self.preview_fbo.draw()
+
         self.output_texture = self.preview_fbo.texture
 
 
