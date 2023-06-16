@@ -93,7 +93,7 @@ def login(usuario, senha):
         return "Limite de caracteres para senha excedido"
     else:
         existe, senha_cadastrada = consulta_senha_usuario(usuario)
-        logger.info('existe: {} senha_cadastrada: {} senha: {}'.format(existe, senha_cadastrada.rstrip(), senha))
+        # logger.info('existe: {} senha_cadastrada: {} senha: {}'.format(existe, senha_cadastrada.rstrip(), senha))
         if not existe:
             return "Usuário não existe"
         else:

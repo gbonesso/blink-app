@@ -80,6 +80,23 @@ class TelaDadosAnalise(MDScreen):
             pos_hint={"x": 0.6, "center_y": 0.60},
         )
         self.add_widget(self.label_fps)
+        # Labels dos gráficos
+        self.add_widget(
+            MDLabel(
+                text="D",
+                pos_hint={"x": 0.05, "center_y": 0.45},
+                size_hint=(None, 0.2),
+                font_style="H2",
+            )
+        )
+        self.add_widget(
+            MDLabel(
+                text="E",
+                pos_hint={"x": 0.05, "center_y": 0.15},
+                size_hint=(None, 0.2),
+                font_style="H2",
+            )
+        )
 
     # Atualiza a tela com os dados da análise selecionada no histórico...
     def on_pre_enter(self):
@@ -123,8 +140,8 @@ class TelaDadosAnalise(MDScreen):
             x_grid=True, y_grid=True, xmin=-0,
             xmax=len(lista_pontos_olho_direito),
             ymin=0, ymax=1,
-            pos_hint={"x": 0.1, "center_y": 0.3},
-            size_hint=(0.8, 0.2),
+            pos_hint={"x": 0.1, "center_y": 0.4},
+            size_hint=(0.9, 0.3),
         )
         plot = LinePlot(color=[0, 1, 0, 1], line_width=4)
         plot.points = lista_pontos_olho_direito
@@ -139,7 +156,7 @@ class TelaDadosAnalise(MDScreen):
             xmax=len(lista_pontos_olho_esquerdo),
             ymin=0, ymax=1,
             pos_hint={"x": 0.1, "center_y": 0.1},
-            size_hint=(0.8, 0.2),
+            size_hint=(0.9, 0.3),
 
         )
         plot = LinePlot(color=[0, 0, 1, 1], line_width=4)
