@@ -81,4 +81,5 @@ class DadosAnalise:
         duracao_segundos = (dt_frame_final - dt_frame_inicial).seconds + (dt_frame_final - dt_frame_inicial).microseconds / 1000000
         logger.info("dt_frame_inicial: {} dt_frame_final: {} duração seg: {}".format(
             dt_frame_inicial, dt_frame_final, duracao_segundos))
+        return duracao_segundos
 
