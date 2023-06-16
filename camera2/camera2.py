@@ -158,6 +158,7 @@ class PyCameraDevice(EventDispatcher):
 
     # Propriedades relacionadas a análise / detecção de face e olhos
     instruction_group = ObjectProperty()
+    instruction_group_local = ObjectProperty()
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -339,9 +340,12 @@ class PyCameraDevice(EventDispatcher):
 
         # Acrescenta instruções de desenho ao frame. Pode ser usado para desenhar
         # os retangulos de detecção de face e olhos
+        if self.instruction_group_local is not None:
+            self.preview_fbo.remove(self.instruction_group_local)
+
         if self.instruction_group is not None:
-            self.preview_fbo.remove(self.instruction_group)
-            self.preview_fbo.add(self.instruction_group)
+            self.instruction_group_local = self.instruction_group
+            self.preview_fbo.add(self.instruction_group_local)
 
         self.preview_fbo.draw()
         self.output_texture = self.preview_fbo.texture

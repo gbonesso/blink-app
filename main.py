@@ -553,13 +553,22 @@ class BlinkApp(MDApp):
                 logger.info('*** x:{} y:{}, w:{}, h:{}'.format(x, y, w, h))
                 self.face_rect = (x, y, w, h)
 
+                # Cria uma imagem recortada somente da face para acelerar o processo de detecção dos olhos
+                face_img_rgba = pixel_array_rgba[
+                    self.face_rect[1]:self.face_rect[1] + self.face_rect[3],
+                    self.face_rect[0]:self.face_rect[0] + self.face_rect[2]
+                ]
+                face_img_rgb = face_img_rgba[:, :, :3]  # Elimina o canal alpha
+                face_gray = cv2.cvtColor(face_img_rgb, cv2.COLOR_BGR2GRAY)
+
                 # Tamanho mínimo de detecção. Nas cameras de desktops o tamanho dos olhos é menor
                 # ToDo: Colocar scaleFactor nas configurações
                 min_size_eyes = self.min_size_eyes
                 min_neighbors_eyes = self.min_neighbors_eyes
                 begin = datetime.now()
                 eyes = eyeCascade.detectMultiScale(
-                    gray,
+                    # gray,
+                    face_gray,
                     scaleFactor=1.02,  # Não precisa escalar muito, a distância da selfie não varia muito...
                     minNeighbors=min_neighbors_eyes,  # Valores maiores fazem menos detecções mais precisas
                     # 5 não estava detectando olho direito...
@@ -579,15 +588,20 @@ class BlinkApp(MDApp):
 
                 logger.info('*** Tempo eyeCascade: {} #eyes:{} '.format(datetime.now() - begin, len(eyes)))
                 for (ex, ey, ew, eh) in eyes:
-                    which_eye = self.get_eye(x, y, w, h, ex, ey, ew, eh)
+                    logger.info('*** eyes - ex:{} ey:{}, ew:{}, eh:{}'.format(ex, ey, ew, eh))
+                    # which_eye = self.get_eye(x, y, w, h, ex, ey, ew, eh)
+                    # Na imagem da face recortada a posição relativa da imagem é zero...
+                    which_eye = self.get_eye(0, 0, w, h, ex, ey, ew, eh)
                     logger.info("which_eye: {}".format(which_eye))
-                    ey_ajustado = float(img.height / 2 - eh - ey)
-                    logger.info('*** ex:{} ey:{}, ew:{}, eh:{}, ey_ajustado:{}'.format(ex, ey, ew, eh, ey_ajustado))
+                    # ey_ajustado = float(img.height / 2 - eh - ey)
+
                     if which_eye == self.Eyes.LEFT:
-                        self.left_eye_rect = (ex, ey, ew, eh)
+                        # self.left_eye_rect = (ex, ey, ew, eh)
+                        self.left_eye_rect = (x + ex, y + ey, ew, eh)
 
                     elif which_eye == self.Eyes.RIGHT:
-                        self.right_eye_rect = (ex, ey, ew, eh)
+                        # self.right_eye_rect = (ex, ey, ew, eh)
+                        self.right_eye_rect = (x + ex, y + ey, ew, eh)
 
                 # Faces e olhos processados para esse frame, fazer a detecção de olhos abertos / fechados
                 # via tensorflow
@@ -735,11 +749,16 @@ class BlinkApp(MDApp):
                         self.right_eye_rect,
                         Color(0, 0, 1),  # Olho direito será azul
                     )
+
+                # for instruction in self.instruction_group.get_group('my_group'):
+                #    logger.info("Instruction :{}".format(instruction))
+
                 if platform == "macosx":
                     self.camera_display_widget.canvas.add(self.instruction_group)
                 elif platform == "android":
                     # Na plataforma Android passa o grupo de instruções para a classe que faz a interface
                     # com a camera, que vai renderizar os retângulos no método _update_preview...
+
                     if self.camera_display_widget.current_camera is not None:
                         self.camera_display_widget.current_camera.instruction_group = self.instruction_group
 
@@ -755,6 +774,7 @@ class BlinkApp(MDApp):
             Line(
                 rectangle=(rect[0], ey_ajustado, rect[2], rect[3]),
                 width=2,
+                group="faces_olhos",
             )
         )
         # self.eye_rectangle.add(Line(rectangle=(0, 0, 50, 50), width=3))
