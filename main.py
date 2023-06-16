@@ -707,8 +707,7 @@ class BlinkApp(MDApp):
                     if self.DEBUG_EYES:
                         self.left_eye_label_dbg.text = "Open" if output_tensor[1] > output_tensor[0] else "Closed"
 
-        # É possível fazer update no Canvas na camera do Desktop...
-        # ToDo: Generalizar para os dois olhos e colocar o retângulo da face
+        # Desenha os retângulos da face e dos olhos no canvas
         if platform == "macosx" or platform == "android":
             if self.instruction_group is not None:
                 if platform == "macosx":
@@ -736,35 +735,13 @@ class BlinkApp(MDApp):
                         self.right_eye_rect,
                         Color(0, 0, 1),  # Olho direito será azul
                     )
-
-                    """
-                    # O y deve ser ajustado, no canvas a origem (0,0) é no canto inferior esquerdo. As coordenadas
-                    # de detecção tem origem no canto superior esquerdo.
-                    ey_ajustado = float(self.camera_display_widget.height - self.left_eye_rect[1] +
-                                        self.camera_display_widget.pos[1] - self.left_eye_rect[3])
-                    logger.info("self.camera_display_widget.pos: {}".format(self.camera_display_widget.pos))
-                    if self.eye_rectangle is not None:
-                        self.camera_display_widget.canvas.remove(self.eye_rectangle)
-                    self.eye_rectangle = InstructionGroup()
-                    self.eye_rectangle.add(Color(1, 0, 0))
-                    self.eye_rectangle.add(
-                        Line(
-                            rectangle=(
-                                self.left_eye_rect[0], ey_ajustado,  # self.left_eye_rect[1],
-                                self.left_eye_rect[2], self.left_eye_rect[3]
-                            ),
-                            width=2
-                        )
-                    )
-                    # self.eye_rectangle.add(Line(rectangle=(0, 0, 50, 50), width=3))
-                    # self.eye_rectangle.add(Line(rectangle=(0, self.camera_display_widget.height, 50, 50), width=3))
-                    """
                 if platform == "macosx":
                     self.camera_display_widget.canvas.add(self.instruction_group)
                 elif platform == "android":
                     # Na plataforma Android passa o grupo de instruções para a classe que faz a interface
                     # com a camera, que vai renderizar os retângulos no método _update_preview...
-                    self.camera_display_widget.current_camera.instruction_group = self.instruction_group
+                    if self.camera_display_widget.current_camera is not None:
+                        self.camera_display_widget.current_camera.instruction_group = self.instruction_group
 
         # logger.info("***Updating Canvas...")
 
