@@ -1,6 +1,6 @@
 from kivy.event import EventDispatcher
 from kivy.graphics.texture import Texture
-from kivy.graphics import Fbo, Callback, Rectangle, Color, Ellipse, Line
+from kivy.graphics import Fbo, Callback, Rectangle, Color, Ellipse, Line, InstructionGroup
 from kivy.properties import (BooleanProperty, StringProperty, ObjectProperty, OptionProperty, ListProperty)
 from kivy.clock import Clock
 
@@ -333,12 +333,34 @@ class PyCameraDevice(EventDispatcher):
 
     def _update_preview(self, dt):
         logger.info("*** _update_preview")
-        self.java_preview_surface_texture.updateTexImage() # Update the texture image from the most frame from image stream
+        self.java_preview_surface_texture.updateTexImage()  # Update the texture image from the most frame from image stream
         self.preview_fbo.ask_update()
         ##
         # with self.preview_fbo:
         #    Color(0.5, 0.5, 0.5, 0.5)
         #    Ellipse(pos=(10, 10), size=(200, 200))
         ##
+
+        if self.eye_rectangle is not None:
+            self.preview_fbo.remove(self.eye_rectangle)
+        self.eye_rectangle = InstructionGroup()
+        self.eye_rectangle.add(Color(1, 0, 0))
+        """
+        self.eye_rectangle.add(
+            Line(
+                rectangle=(
+                    self.left_eye_rect[0], ey_ajustado,  # self.left_eye_rect[1],
+                    self.left_eye_rect[2], self.left_eye_rect[3]
+                ),
+                width=2
+            )
+        )
+        """
+        self.eye_rectangle.add(Line(rectangle=(0, 0, 50, 50), width=3))
+        # self.eye_rectangle.add(Line(rectangle=(0, self.camera_display_widget.height, 50, 50), width=3))
+        self.preview_fbo.add(self.eye_rectangle)
+
         self.preview_fbo.draw()
         self.output_texture = self.preview_fbo.texture
+
+

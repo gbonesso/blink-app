@@ -92,7 +92,7 @@ class CameraDisplayWidget(StencilView):
         cameras = self.camera_interface.cameras
         camera_infos = ["Camera ID {}, facing {}".format(c.camera_id, c.facing) for c in cameras]
         for camera in cameras:
-            print("Camera ID {}, facing {}, resolutions {}".format(
+            logger.info("Camera ID {}, facing {}, resolutions {}".format(
                 camera.camera_id, camera.facing, camera.supported_resolutions))
 
     def stream_camera_index(self, index):
@@ -178,22 +178,22 @@ class CameraDisplayWidget(StencilView):
         self.restart_stream()
 
     def on_correct_camera(self, instance, correct):
-        print("Correct became", correct)
+        logger.info("Correct became", correct)
         if correct:
             self.tex_coords = [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0]
-            print("Set 0!")
+            logger.info("Set 0!")
         else:
             self.tex_coords = [0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0]
-            print("Set 1!")
+            logger.info("Set 1!")
 
     def on_tex_coords(self, instance, value):
-        print("tex_coords became", self.tex_coords)
+        logger.info("tex_coords became", self.tex_coords)
 
     def _update_rect(self, *args):
         self._update_rect_to_fill()
 
     def _update_rect_to_fit(self, *args):
-        print('*** _update_rect_to_fit')
+        logger.info('*** _update_rect_to_fit')
         w, h = self.resolution
         aspect_ratio = h / w
 
@@ -212,7 +212,7 @@ class CameraDisplayWidget(StencilView):
         self._rect_size = [aspect_width, aspect_height]
 
     def _update_rect_to_fill(self, *args):
-        print('*** _update_rect_to_fit')
+        logger.info('*** _update_rect_to_fit')
         w, h = self.resolution
 
         aspect_ratio = h / w
