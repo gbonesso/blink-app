@@ -76,7 +76,7 @@ class TelaDadosAnalise(MDScreen):
             self.main_app.dados_analise_selecionado.data_hora_analise.strftime("%d/%m/%Y %H:%M")
         )
         self.label_duracao.text = "{}".format(
-            self.main_app.dados_analise_selecionado.duracao_analise
+            self.main_app.dados_analise_selecionado.get_duracao()
         )
         self.label_qt_piscadas.text = "{}".format(
             self.main_app.dados_analise_selecionado.quantidade_de_piscadas

@@ -1,5 +1,5 @@
 import logging
-import datetime
+from datetime import datetime, timedelta
 from dataclasses import dataclass
 
 logger = logging.getLogger(__file__)
@@ -75,7 +75,10 @@ class DadosAnalise:
             )
 
     def get_duracao(self):
-        dt_frame_inicial = self.dados_frames[0].data_hora_frame
+        dt_frame_inicial = datetime.strptime(self.dados_frames[0].data_hora_frame, "%d/%m/%Y %H:%M:%S %f")
         qt_frames = len(self.dados_frames)
-        dt_frame_final = self.dados_frames[qt_frames - 1].data_hora_frame
-        logger.info("dt_frame_inicial: {} dt_frame_final: {}".format(dt_frame_inicial, dt_frame_final))
+        dt_frame_final = datetime.strptime(self.dados_frames[qt_frames - 1].data_hora_frame, "%d/%m/%Y %H:%M:%S %f")
+        duracao_segundos = (dt_frame_final - dt_frame_inicial).seconds + (dt_frame_final - dt_frame_inicial).microseconds / 1000000
+        logger.info("dt_frame_inicial: {} dt_frame_final: {} duração seg: {}".format(
+            dt_frame_inicial, dt_frame_final, duracao_segundos))
+
