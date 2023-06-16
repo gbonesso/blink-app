@@ -1,6 +1,6 @@
 from kivy.event import EventDispatcher
 from kivy.graphics.texture import Texture
-from kivy.graphics import Fbo, Callback, Rectangle, Color, Ellipse, Line, InstructionGroup
+from kivy.graphics import Fbo, Callback, Rectangle, Color, Ellipse, Line, InstructionGroup, Rotate
 from kivy.properties import (BooleanProperty, StringProperty, ObjectProperty, OptionProperty, ListProperty)
 from kivy.clock import Clock
 
@@ -344,7 +344,7 @@ class PyCameraDevice(EventDispatcher):
             self.preview_fbo.remove(self.instruction_group_local)
 
         if self.instruction_group is not None:
-            texture = Texture.create(size=(200, 200), colorfmt='rgba')
+            # texture = Texture.create(size=(200, 200), colorfmt='rgba')
             self.instruction_group.add(
                 Line(
                     rectangle=(0, 0, 200, 200),
@@ -352,6 +352,7 @@ class PyCameraDevice(EventDispatcher):
                     # texture=texture,
                 )
             )
+            self.instruction_group.add(Rotate(angle=-90))
             self.instruction_group_local = self.instruction_group
             self.preview_fbo.add(self.instruction_group_local)
 
