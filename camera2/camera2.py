@@ -343,7 +343,7 @@ class PyCameraDevice(EventDispatcher):
         # os retangulos de detecção de face e olhos
         if self.instruction_group is not None:
             self.preview_fbo.remove(self.instruction_group)
-            self.preview_fbo.add(self.eye_rectangle)
+            self.preview_fbo.add(self.instruction_group)
 
         self.preview_fbo.draw()
         self.output_texture = self.preview_fbo.texture

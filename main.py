@@ -156,13 +156,11 @@ class BlinkApp(MDApp):
 
     menu = ObjectProperty()
     content_navigation_drawer = ObjectProperty()
-    """
-    label_face = ObjectProperty()
-    label_left_eye = ObjectProperty()
-    label_right_eye = ObjectProperty()
-    """
     flip_camera_button = ObjectProperty()
     start_analysis_button = ObjectProperty()
+
+    # Coordenadas da face e dos olhos
+    face_rect = ObjectProperty()
     left_eye_rect = ObjectProperty()
     right_eye_rect = ObjectProperty()
 
@@ -192,7 +190,7 @@ class BlinkApp(MDApp):
     right_eye_image_card = ObjectProperty()
     right_eye_image_dbg = ObjectProperty()
     right_eye_label_dbg = ObjectProperty()
-    eye_rectangle = ObjectProperty()
+    instruction_group = ObjectProperty()
 
     # Configuração inicial do arquivo "config.ini"
     def build_config(self, config):
@@ -553,6 +551,7 @@ class BlinkApp(MDApp):
             logger.info('*** Tempo faceCascade: {} #faces:{} '.format(datetime.now() - begin, len(faces)))
             for (x, y, w, h) in faces:
                 logger.info('*** x:{} y:{}, w:{}, h:{}'.format(x, y, w, h))
+                self.face_rect = (x, y, w, h)
 
                 # Tamanho mínimo de detecção. Nas cameras de desktops o tamanho dos olhos é menor
                 # ToDo: Colocar scaleFactor nas configurações
@@ -710,9 +709,35 @@ class BlinkApp(MDApp):
 
         # É possível fazer update no Canvas na camera do Desktop...
         # ToDo: Generalizar para os dois olhos e colocar o retângulo da face
-        if platform == "macosx":
+        if platform == "macosx" or platform == "android":
+            if self.instruction_group is not None:
+                if platform == "macosx":
+                    self.camera_display_widget.canvas.remove(self.instruction_group)
             if self.DEBUG_EYES:
+                self.instruction_group = InstructionGroup()
+                if self.face_rect is not None:
+                    # Cria sequencia de instrucoes para a face
+                    self.create_group_instructions_rect(
+                        self.camera_display_widget,
+                        self.face_rect,
+                        Color(1, 1, 1),  # Face será cinza
+                    )
                 if self.left_eye_rect is not None:
+                    # Cria sequencia de instrucoes para olho esquerdo
+                    self.create_group_instructions_rect(
+                        self.camera_display_widget,
+                        self.left_eye_rect,
+                        Color(0, 1, 0),  # Olho esquerdo será verde
+                    )
+                if self.right_eye_rect is not None:
+                    # Cria sequencia de instrucoes para olho direito
+                    self.create_group_instructions_rect(
+                        self.camera_display_widget,
+                        self.right_eye_rect,
+                        Color(0, 0, 1),  # Olho direito será azul
+                    )
+
+                    """
                     # O y deve ser ajustado, no canvas a origem (0,0) é no canto inferior esquerdo. As coordenadas
                     # de detecção tem origem no canto superior esquerdo.
                     ey_ajustado = float(self.camera_display_widget.height - self.left_eye_rect[1] +
@@ -733,12 +758,30 @@ class BlinkApp(MDApp):
                     )
                     # self.eye_rectangle.add(Line(rectangle=(0, 0, 50, 50), width=3))
                     # self.eye_rectangle.add(Line(rectangle=(0, self.camera_display_widget.height, 50, 50), width=3))
-                    self.camera_display_widget.canvas.add(self.eye_rectangle)
-            else:
-                if self.eye_rectangle is not None:
-                    self.camera_display_widget.canvas.remove(self.eye_rectangle)
+                    """
+                if platform == "macosx":
+                    self.camera_display_widget.canvas.add(self.instruction_group)
+                elif platform == "android":
+                    # Na plataforma Android passa o grupo de instruções para a classe que faz a interface
+                    # com a camera, que vai renderizar os retângulos no método _update_preview...
+                    self.camera_display_widget.camera_interface.instruction_group = self.instruction_group
 
         # logger.info("***Updating Canvas...")
+
+    def create_group_instructions_rect(self, cdw, rect, color):
+        # O y deve ser ajustado, no canvas a origem (0,0) é no canto inferior esquerdo. As coordenadas
+        # de detecção tem origem no canto superior esquerdo.
+        ey_ajustado = float(cdw.height - rect[1] + cdw.pos[1] - rect[3])
+        logger.info("self.camera_display_widget.pos: {}".format(cdw.pos))
+        self.instruction_group.add(color)
+        self.instruction_group.add(
+            Line(
+                rectangle=(rect[0], ey_ajustado, rect[2], rect[3]),
+                width=2,
+            )
+        )
+        # self.eye_rectangle.add(Line(rectangle=(0, 0, 50, 50), width=3))
+        # self.eye_rectangle.add(Line(rectangle=(0, self.camera_display_widget.height, 50, 50), width=3))
 
     # =========== Define uma Snackbar
     def snackbar_show(self, texto):
