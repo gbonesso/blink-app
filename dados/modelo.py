@@ -1,6 +1,7 @@
 import logging
 from datetime import datetime, timedelta
 from dataclasses import dataclass
+from itertools import groupby
 
 logger = logging.getLogger(__file__)
 logger.setLevel(logging.DEBUG)
@@ -82,4 +83,33 @@ class DadosAnalise:
         logger.info("dt_frame_inicial: {} dt_frame_final: {} duração seg: {}".format(
             dt_frame_inicial, dt_frame_final, duracao_segundos))
         return duracao_segundos
+
+    def get_qt_piscadas(self):
+        qt_piscadas_olho_direito = 0
+        qt_piscadas_olho_esquerdo = 0
+        olhos_fechados_consecutivos = 2  # Quantidade de olhos fechados consecutivos que caracteriza uma piscada
+
+        lista_piscadas_olho_esquerdo = []
+        lista_piscadas_olho_direito = []
+
+        for dado_frame in self.dados_frames:
+            lista_piscadas_olho_direito.append(dado_frame.olho_direito_aberto)
+            lista_piscadas_olho_esquerdo.append(dado_frame.olho_esquerdo_aberto)
+
+        # Conta repeticoes consecutivas para o olho direito
+        for repeticoes_consecutivas in (list(g) for k, g in groupby(lista_piscadas_olho_direito)):
+            if len(repeticoes_consecutivas) >= olhos_fechados_consecutivos:
+                if repeticoes_consecutivas[0] == 0.0:  # Olho fechado
+                    qt_piscadas_olho_direito += 1
+
+        # Conta repeticoes consecutivas para o olho esquerdo
+        for repeticoes_consecutivas in (list(g) for k, g in groupby(lista_piscadas_olho_esquerdo)):
+            if len(repeticoes_consecutivas) >= olhos_fechados_consecutivos:
+                if repeticoes_consecutivas[0] == 0.0:  # Olho fechado
+                    qt_piscadas_olho_esquerdo += 1
+
+        logger.info("# Piscadas olho direito: {} / # Piscadas olho esquerdo: {}".format(qt_piscadas_olho_direito,
+                                                                                        qt_piscadas_olho_esquerdo))
+
+        return qt_piscadas_olho_direito, qt_piscadas_olho_esquerdo
 

@@ -59,7 +59,7 @@ class TelaDadosAnalise(MDScreen):
         # Linha "Frequência"
         self.add_widget(
             MDLabel(
-                text="Frequência",
+                text="Frequência das Piscadas",
                 pos_hint={"x": 0.1, "center_y": 0.65},
             )
         )
@@ -105,15 +105,15 @@ class TelaDadosAnalise(MDScreen):
             self.main_app.dados_analise_selecionado.data_hora_analise.strftime("%d/%m/%Y %H:%M")
         )
         duracao = self.main_app.dados_analise_selecionado.get_duracao()
-        self.label_duracao.text = "{}".format(duracao)
-        self.label_qt_piscadas.text = "{}".format(
-            self.main_app.dados_analise_selecionado.quantidade_de_piscadas
-        )
-        self.label_frequencia.text = "{}".format(
-            self.main_app.dados_analise_selecionado.piscadas_por_minuto
-        )
+        qt_piscadas_olho_direito, qt_piscadas_olho_esquerdo = self.main_app.dados_analise_selecionado.get_qt_piscadas()
+        frequencia_piscadas_olho_direito = qt_piscadas_olho_direito / duracao * 60  # Piscadas / min
+        frequencia_piscadas_olho_esquerdo = qt_piscadas_olho_esquerdo / duracao * 60  # Piscadas / min
+        self.label_duracao.text = "{:.2f}seg".format(duracao)
+        self.label_qt_piscadas.text = "D: {} - E: {}".format(qt_piscadas_olho_direito, qt_piscadas_olho_esquerdo)
+        self.label_frequencia.text = "D: {:.2f}/min - E: {:.2f}/min".format(frequencia_piscadas_olho_direito,
+                                                                            frequencia_piscadas_olho_esquerdo)
         fps = len(self.main_app.dados_analise_selecionado.dados_frames) / duracao
-        self.label_fps.text = "{}".format(fps)
+        self.label_fps.text = "{:.2f}fps".format(fps)
 
         # Monta a lista de pontos a partir dos dados da análise
         lista_pontos_olho_direito = []
