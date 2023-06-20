@@ -45,9 +45,9 @@ from utils import rotate
 # from blink import blink_utils as blink
 
 logger = logging.getLogger(__file__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 handler = logging.StreamHandler()
-handler.setLevel(logging.DEBUG)
+handler.setLevel(logging.INFO)
 logger.addHandler(handler)
 
 if platform == "macosx" or platform == "android":
@@ -245,17 +245,17 @@ class BlinkApp(MDApp):
         if screen_to_go == "screen_01":
             self.flip_camera_button.opacity = 1
             self.start_analysis_button.opacity = 1
+            self.canvas_widget.opacity = 1
             if self.DEBUG_EYES:
                 self.left_eye_image_card.opacity = 1
                 self.right_eye_image_card.opacity = 1
-                self.canvas_widget.opacity = 1
         else:
             self.flip_camera_button.opacity = 0
             self.start_analysis_button.opacity = 0
+            self.canvas_widget.opacity = 0
             if self.DEBUG_EYES:
                 self.left_eye_image_card.opacity = 0
                 self.right_eye_image_card.opacity = 0
-                self.canvas_widget.opacity = 0
 
     def habilita_menu(self):
         self.content_navigation_drawer.ids.novaanalise.disabled = False
@@ -296,32 +296,7 @@ class BlinkApp(MDApp):
         self.left_eye_image_card.add_widget(self.left_eye_image_dbg)
         self.root.add_widget(self.left_eye_image_card)
 
-        # Widget para sobrepor a imagem e desenhar os retangulos de detecção no cado do Android
-        self.canvas_widget = Widget(
-            pos_hint={"top": 1},
-            size_hint=(1, 1),
-            opacity=0,
-        )
-        """
-        with self.canvas_widget.canvas:
-            Color(1, 0, 0),
-            Line(
-                rectangle=(50, 50, 180, 250),
-                width=2,
-            ),
-        """
-        self.root.add_widget(self.canvas_widget)
-
     def build(self):
-        """menu_items = [  # variável usada para configura os itens do menu
-            {
-                "viewclass": "OneLineListItem",  # usado para mostrar o menu como lista
-                "text": f"Opção {i}",
-                "height": dp(56),
-            } for i in range(5)
-        ]
-        self.menu = MDDropdownMenu(items=menu_items, width_mult=3)
-        """
         self.config.add_callback(self.configuracao_modificada)
         self.configuracao_modificada(None, None, None)  # Força a atualização das configurações
 
@@ -385,6 +360,15 @@ class BlinkApp(MDApp):
 
         # screen_01.add_widget(app_bar)
         screen_01.add_widget(self.camera_display_widget)
+
+        # Widget para sobrepor a imagem e desenhar os retangulos de detecção no cado do Android
+        self.canvas_widget = Widget(
+            pos_hint={"top": 1},
+            size_hint=(1, 1),
+            # opacity=0,
+        )
+        # self.root.add_widget(self.canvas_widget)
+        screen_01.add_widget(self.canvas_widget)
 
         # Tela inicial
         screen_00 = TelaInicial(
@@ -470,6 +454,8 @@ class BlinkApp(MDApp):
 
         self.root.add_widget(app_bar)
 
+
+
         # Imagem do olho para debug...
         if self.DEBUG_EYES:
             self.build_debug_eyes()
@@ -538,6 +524,8 @@ class BlinkApp(MDApp):
         if self.screen_manager.current != "screen_01":
             return
 
+        begin_update = datetime.now()  # Para medir o tempo total do update
+
         self.root.canvas.ask_update()
 
         img = self.camera_display_widget.export_as_image()
@@ -548,12 +536,12 @@ class BlinkApp(MDApp):
             # texture.pixels have the RGBA data
             # logger.info('*** img.texture.pixels: {}'.format(img.texture.pixels))
             pixel_array = np.frombuffer(img.texture.pixels, np.uint8)
-            logger.info("pixel_array_shape: {}".format(pixel_array.shape))
+            logger.debug("pixel_array_shape: {}".format(pixel_array.shape))
             # logger.info('*** pixel_array - len: {} height: {}, width: {}'.
             #             format(len(pixel_array), img.height, img.width))
             pixel_array_rgba = pixel_array.reshape(img.height, img.width, 4)
             pixel_array = pixel_array_rgba[:, :, :3]  # Elimina o canal alpha
-            logger.info("pixel_array_shape (after reshape): {}".format(pixel_array.shape))
+            logger.debug("pixel_array_shape (after reshape): {}".format(pixel_array.shape))
             # logger.info('*** pixel_array: {}'.format(pixel_array))
             # Aumenta o contraste...
             # pixel_array = self.pre_process_image(pixel_array)
@@ -636,7 +624,7 @@ class BlinkApp(MDApp):
                         self.right_eye_rect[0]:self.right_eye_rect[0] + self.right_eye_rect[2]
                     ]
                     image_color_resized = cv2.resize(right_eye_img, (32, 32))
-                    logger.info("pixel_array.shape: {} image_color_resized.shape {} right_eye_img.shape {}".format(
+                    logger.debug("pixel_array.shape: {} image_color_resized.shape {} right_eye_img.shape {}".format(
                         pixel_array.shape, image_color_resized.shape, right_eye_img.shape))
 
                     # *** Cria imagem para debug...
@@ -672,11 +660,10 @@ class BlinkApp(MDApp):
                         teste_tflite_output = "tflite output: {}".format(
                             output_tensor,
                         )
-                        logger.info(teste_tflite_output)
 
                         # teste_tflite_output = self.model.pred(input_data)
                         # teste_tflite_output = output['index']
-                        logger.info("teste tflite output: {}".format(teste_tflite_output))
+                        logger.debug("teste tflite output: {}".format(teste_tflite_output))
                     ###
 
                     if self.DEBUG_EYES:
@@ -689,7 +676,7 @@ class BlinkApp(MDApp):
                         self.left_eye_rect[0]:self.left_eye_rect[0] + self.left_eye_rect[2]
                     ]
                     image_color_resized = cv2.resize(left_eye_img, (32, 32))
-                    logger.info("pixel_array.shape: {} image_color_resized.shape {} right_eye_img.shape {}".format(
+                    logger.debug("pixel_array.shape: {} image_color_resized.shape {} right_eye_img.shape {}".format(
                         pixel_array.shape, image_color_resized.shape, left_eye_img.shape))
 
                     # Cria imagem para debug...
@@ -712,24 +699,23 @@ class BlinkApp(MDApp):
 
                     # *** TensorflowLite
                     if platform == "macosx" or platform == "android":
+                        begin_tensorflow = datetime.now()  # Para marcar o tempo do tensorflow
                         output = self.interpreter.get_output_details()[0]
                         input = self.interpreter.get_input_details()[0]
                         self.interpreter.set_tensor(input['index'], input_data)
                         self.interpreter.invoke()
                         output_tensor = self.interpreter.get_tensor(output['index'])
                         output_tensor = np.squeeze(output_tensor)
+                        logger.info('*** Tempo tensorflow (1 olho): {}'.format(datetime.now() - begin_tensorflow))
 
                         if self.analise_iniciada:
                             dados_frame_atual.olho_esquerdo_aberto = 1 if output_tensor[1] > output_tensor[0] else 0
 
-                        teste_tflite_output = "tflite output: {}".format(
-                            output_tensor,
-                        )
-                        logger.info(teste_tflite_output)
+                        teste_tflite_output = "tflite output: {}".format(output_tensor)
 
                         # teste_tflite_output = self.model.pred(input_data)
                         # teste_tflite_output = output['index']
-                        logger.info("teste tflite output: {}".format(teste_tflite_output))
+                        logger.debug("teste tflite output: {}".format(teste_tflite_output))
                     ###
 
                     if self.analise_iniciada:
@@ -749,52 +735,45 @@ class BlinkApp(MDApp):
                 # if platform == "macosx":
                 # self.camera_display_widget.canvas.remove(self.instruction_group)
                 self.canvas_widget.canvas.remove(self.instruction_group)
-            if self.DEBUG_EYES:
-                self.instruction_group = InstructionGroup()
-                if self.face_rect is not None:
-                    # Cria sequencia de instrucoes para a face
-                    self.create_group_instructions_rect(
-                        self.camera_display_widget,
-                        self.face_rect,
-                        Color(1, 1, 1),  # Face será cinza
-                    )
-                if self.left_eye_rect is not None:
-                    # Cria sequencia de instrucoes para olho esquerdo
-                    self.create_group_instructions_rect(
-                        self.camera_display_widget,
-                        self.left_eye_rect,
-                        Color(0, 1, 0),  # Olho esquerdo será verde
-                    )
-                if self.right_eye_rect is not None:
-                    # Cria sequencia de instrucoes para olho direito
-                    self.create_group_instructions_rect(
-                        self.camera_display_widget,
-                        self.right_eye_rect,
-                        Color(0, 0, 1),  # Olho direito será azul
-                    )
+            # if self.DEBUG_EYES:
+            self.instruction_group = InstructionGroup()
+            if self.face_rect is not None:
+                # Cria sequencia de instrucoes para a face
+                self.create_group_instructions_rect(
+                    self.camera_display_widget,
+                    self.face_rect,
+                    Color(1, 1, 1),  # Face será cinza
+                )
+            if self.left_eye_rect is not None:
+                # Cria sequencia de instrucoes para olho esquerdo
+                self.create_group_instructions_rect(
+                    self.camera_display_widget,
+                    self.left_eye_rect,
+                    Color(0, 1, 0),  # Olho esquerdo será verde
+                )
+            if self.right_eye_rect is not None:
+                # Cria sequencia de instrucoes para olho direito
+                self.create_group_instructions_rect(
+                    self.camera_display_widget,
+                    self.right_eye_rect,
+                    Color(0, 0, 1),  # Olho direito será azul
+                )
 
-                # for instruction in self.instruction_group.get_group('my_group'):
-                #    logger.info("Instruction :{}".format(instruction))
+            # for instruction in self.instruction_group.get_group('my_group'):
+            #    logger.info("Instruction :{}".format(instruction))
 
-                # if platform == "macosx":
-                # self.camera_display_widget.canvas.add(self.instruction_group)
-                self.canvas_widget.canvas.add(self.instruction_group)
+            # if platform == "macosx":
+            # self.camera_display_widget.canvas.add(self.instruction_group)
+            self.canvas_widget.canvas.add(self.instruction_group)
 
-                """
-                elif platform == "android":
-                    # Na plataforma Android passa o grupo de instruções para a classe que faz a interface
-                    # com a camera, que vai renderizar os retângulos no método _update_preview...
-
-                    if self.camera_display_widget.current_camera is not None:
-                        self.camera_display_widget.current_camera.instruction_group = self.instruction_group
-                """
+        logger.info('*** Tempo total update: {}'.format(datetime.now() - begin_update))
         # logger.info("***Updating Canvas...")
 
     def create_group_instructions_rect(self, cdw, rect, color):
         # O y deve ser ajustado, no canvas a origem (0,0) é no canto inferior esquerdo. As coordenadas
         # de detecção tem origem no canto superior esquerdo.
         ey_ajustado = float(cdw.height - rect[1] + cdw.pos[1] - rect[3])
-        logger.info("self.camera_display_widget.pos: {}".format(cdw.pos))
+        logger.debug("self.camera_display_widget.pos: {}".format(cdw.pos))
         self.instruction_group.add(color)
         self.instruction_group.add(
             Line(
