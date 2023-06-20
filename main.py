@@ -302,7 +302,7 @@ class BlinkApp(MDApp):
 
         # ToDo: Pensar nas cargas que podem ser feitas offline, para não travar a thread principal...
         if platform == "macosx" or platform == "android":
-            self.interpreter = Interpreter(model_path="assets/talking_300W_50_epoch.tflite")
+            self.interpreter = Interpreter(model_path="assets/talking_300W_v2_50_epoch.tflite")
             self.interpreter.allocate_tensors()
             input = self.interpreter.get_input_details()[0]
             logger.info("input_tensor.shape: {}".format(input['shape']))
