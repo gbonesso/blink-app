@@ -40,6 +40,7 @@ from tela_configuracao import TelaConfiguracao
 from dados.modelo import DadoFrame, DadosAnalise
 from sobre import Sobre
 from cadastro_utils import get_storage_path
+from tensorflow_utils import TensorflowModel
 from utils import rotate
 
 # from blink import blink_utils as blink
@@ -174,6 +175,7 @@ class BlinkApp(MDApp):
     # TensorflowLite Interpreter
     interpreter = ObjectProperty()
     model = ObjectProperty()
+    tensorflow_model = ObjectProperty()
 
     # Repositório de dados de análise
     repositorio_dados = ObjectProperty()
@@ -434,6 +436,7 @@ class BlinkApp(MDApp):
         self.root.add_widget(self.start_analysis_button)
 
         Clock.schedule_interval(self.update, 0)
+        Clock.schedule_once(self.init_tensorflow_model, 0)
 
         self.root.add_widget(self.app_bar)
 
@@ -442,6 +445,10 @@ class BlinkApp(MDApp):
             self.build_debug_eyes()
 
         return self.root
+
+    def init_tensorflow_model(self, arg):
+        logger.debug("init_tensorflow_model arg: {}".format(arg))
+        self.tensorflow_model = TensorflowModel()
 
     # on_start é executado após o build()
     # ToDo: Ainda tenho que descobrir como deixar a camera frontal como padrão no Android
@@ -521,7 +528,7 @@ class BlinkApp(MDApp):
     """
 
     def on_texture(self, instance, value):
-        print("App texture changed to {}".format(value))
+        logger.debug("App texture changed to {}".format(value))
 
     def update(self, dt):
         # Se a tela atual não for a tela de análise não faz o update da tela...
@@ -546,6 +553,12 @@ class BlinkApp(MDApp):
             pixel_array_rgba = pixel_array.reshape(img.height, img.width, 4)
             pixel_array = pixel_array_rgba[:, :, :3]  # Elimina o canal alpha
             logger.debug("pixel_array_shape (after reshape): {}".format(pixel_array.shape))
+
+            # Get eyes coordinates via YOLO model
+            begin_yolo = datetime.now()
+            self.tensorflow_model.get_eyes_coordinates(pixel_array)
+            logger.info('*** Tempo yolo: {}'.format(datetime.now() - begin_yolo))
+
             # logger.info('*** pixel_array: {}'.format(pixel_array))
             # Aumenta o contraste...
             # pixel_array = self.pre_process_image(pixel_array)
@@ -652,8 +665,8 @@ class BlinkApp(MDApp):
                     # *** TensorflowLite
                     if platform == "macosx" or platform == "android":
                         output = self.interpreter.get_output_details()[0]
-                        input = self.interpreter.get_input_details()[0]
-                        self.interpreter.set_tensor(input['index'], input_data)
+                        input_details = self.interpreter.get_input_details()[0]
+                        self.interpreter.set_tensor(input_details['index'], input_data)
                         self.interpreter.invoke()
                         output_tensor = self.interpreter.get_tensor(output['index'])
                         output_tensor = np.squeeze(output_tensor)
@@ -667,7 +680,7 @@ class BlinkApp(MDApp):
 
                         # teste_tflite_output = self.model.pred(input_data)
                         # teste_tflite_output = output['index']
-                        logger.debug("teste tflite output: {}".format(teste_tflite_output))
+                        logger.debug("teste tflite output :{}".format(teste_tflite_output))
                     ###
 
                     if self.DEBUG_EYES:
