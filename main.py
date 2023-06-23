@@ -556,7 +556,7 @@ class BlinkApp(MDApp):
 
             # Get eyes coordinates via YOLO model
             begin_yolo = datetime.now()
-            self.tensorflow_model.get_eyes_coordinates(pixel_array)
+            # self.tensorflow_model.get_eyes_coordinates(pixel_array)
             logger.info('*** Tempo yolo: {}'.format(datetime.now() - begin_yolo))
 
             # logger.info('*** pixel_array: {}'.format(pixel_array))
