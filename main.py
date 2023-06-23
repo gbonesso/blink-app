@@ -41,7 +41,7 @@ from dados.modelo import DadoFrame, DadosAnalise
 from sobre import Sobre
 from cadastro_utils import get_storage_path
 from tensorflow_utils import TensorflowModel
-from utils import rotate
+from utils import get_texture_from_rgba_array
 
 # from blink import blink_utils as blink
 
@@ -51,6 +51,7 @@ handler = logging.StreamHandler()
 handler.setLevel(logging.INFO)
 logger.addHandler(handler)
 
+"""
 if platform == "macosx" or platform == "android":
     try:
         # Import TFLite interpreter from tflite_runtime package if it's available.
@@ -61,6 +62,7 @@ if platform == "macosx" or platform == "android":
         import tensorflow as tf
         Interpreter = tf.lite.Interpreter
         load_delegate = tf.lite.experimental.load_delegate
+"""
 
 # Define se usaremos dados reais (dos arquivos json criados nas análises) ou dados "fake" para testes
 REAL_DATA = True
@@ -304,6 +306,7 @@ class BlinkApp(MDApp):
         self.config.add_callback(self.configuracao_modificada)
         self.configuracao_modificada(None, None, None)  # Força a atualização das configurações
 
+        """
         # ToDo: Pensar nas cargas que podem ser feitas offline, para não travar a thread principal...
         if platform == "macosx" or platform == "android":
             self.interpreter = Interpreter(model_path="assets/talking_300W_v2_50_epoch.tflite")
@@ -314,6 +317,7 @@ class BlinkApp(MDApp):
             logger.info("input_tensor.quantization_parameters.scales: {}".
                         format(input['quantization_parameters']['scales']))
             # logger.info("input_tensor.quantization_parameters: {}".format(input['quantization_parameters']))
+        """
 
         self.repositorio_dados = RepositorioDadosAnalise()
 
@@ -640,12 +644,15 @@ class BlinkApp(MDApp):
                         self.right_eye_rect[1]:self.right_eye_rect[1] + self.right_eye_rect[3],
                         self.right_eye_rect[0]:self.right_eye_rect[0] + self.right_eye_rect[2]
                     ]
-                    image_color_resized = cv2.resize(right_eye_img, (32, 32))
-                    logger.debug("pixel_array.shape: {} image_color_resized.shape {} right_eye_img.shape {}".format(
-                        pixel_array.shape, image_color_resized.shape, right_eye_img.shape))
+                    # image_color_resized = cv2.resize(right_eye_img, (32, 32))
+                    # logger.debug("pixel_array.shape: {} image_color_resized.shape {} right_eye_img.shape {}".format(
+                    #    pixel_array.shape, image_color_resized.shape, right_eye_img.shape))
 
                     # *** Cria imagem para debug...
                     if self.DEBUG_EYES:
+                        right_eye_texture = get_texture_from_rgba_array(
+                            pixel_array_rgba, self.right_eye_rect, (200, 200))
+                        """
                         right_eye_img_rgba = pixel_array_rgba[
                             self.right_eye_rect[1]:self.right_eye_rect[1] + self.right_eye_rect[3],
                             self.right_eye_rect[0]:self.right_eye_rect[0] + self.right_eye_rect[2]
@@ -653,15 +660,16 @@ class BlinkApp(MDApp):
                         image_color_resized_debug = cv2.resize(right_eye_img_rgba, (200, 200))
                         texture = Texture.create(size=(200, 200))
                         texture.blit_buffer(bytes(image_color_resized_debug), colorfmt="rgba", bufferfmt="ubyte")
+                        """
                         with self.right_eye_image_dbg.canvas:
-                            Rectangle(texture=texture, pos=self.right_eye_image_dbg.pos, size=(200, 200))
+                            Rectangle(texture=right_eye_texture, pos=self.right_eye_image_dbg.pos, size=(200, 200))
 
                     # image_prediction = blink.get_prediction(self.model, image_color_resized)
 
-                    input_data = np.float32(image_color_resized)
-                    # input_data = image_color_resized
-                    input_data = np.array([input_data])  # Convert single image to a batch
+                    # input_data = np.float32(image_color_resized)
+                    # input_data = np.array([input_data])  # Convert single image to a batch
 
+                    """
                     # *** TensorflowLite
                     if platform == "macosx" or platform == "android":
                         output = self.interpreter.get_output_details()[0]
@@ -671,8 +679,7 @@ class BlinkApp(MDApp):
                         output_tensor = self.interpreter.get_tensor(output['index'])
                         output_tensor = np.squeeze(output_tensor)
 
-                        if self.analise_iniciada:
-                            dados_frame_atual.olho_direito_aberto = 1 if output_tensor[1] > output_tensor[0] else 0
+                        
 
                         teste_tflite_output = "tflite output: {}".format(
                             output_tensor,
@@ -682,9 +689,15 @@ class BlinkApp(MDApp):
                         # teste_tflite_output = output['index']
                         logger.debug("teste tflite output :{}".format(teste_tflite_output))
                     ###
+                    """
+
+                    openess_eye_prediction = self.tensorflow_model.get_openess_eye_prediction(right_eye_img)
+
+                    if self.analise_iniciada:
+                        dados_frame_atual.olho_direito_aberto = 1 if openess_eye_prediction == "open" else 0
 
                     if self.DEBUG_EYES:
-                        self.right_eye_label_dbg.text = "Open" if output_tensor[1] > output_tensor[0] else "Closed"
+                        self.right_eye_label_dbg.text = openess_eye_prediction
 
                 # Código repetido, generalizar...
                 if self.left_eye_rect is not None:
@@ -692,12 +705,15 @@ class BlinkApp(MDApp):
                         self.left_eye_rect[1]:self.left_eye_rect[1] + self.left_eye_rect[3],
                         self.left_eye_rect[0]:self.left_eye_rect[0] + self.left_eye_rect[2]
                     ]
-                    image_color_resized = cv2.resize(left_eye_img, (32, 32))
-                    logger.debug("pixel_array.shape: {} image_color_resized.shape {} right_eye_img.shape {}".format(
-                        pixel_array.shape, image_color_resized.shape, left_eye_img.shape))
+                    # image_color_resized = cv2.resize(left_eye_img, (32, 32))
+                    # logger.debug("pixel_array.shape: {} image_color_resized.shape {} right_eye_img.shape {}".format(
+                    #    pixel_array.shape, image_color_resized.shape, left_eye_img.shape))
 
                     # Cria imagem para debug...
                     if self.DEBUG_EYES:
+                        left_eye_texture = get_texture_from_rgba_array(
+                            pixel_array_rgba, self.left_eye_rect, (200, 200))
+                        """
                         left_eye_img_rgba = pixel_array_rgba[
                             self.left_eye_rect[1]:self.left_eye_rect[1] + self.left_eye_rect[3],
                             self.left_eye_rect[0]:self.left_eye_rect[0] + self.left_eye_rect[2]
@@ -705,15 +721,17 @@ class BlinkApp(MDApp):
                         image_color_resized_debug = cv2.resize(left_eye_img_rgba, (200, 200))
                         texture = Texture.create(size=(200, 200))
                         texture.blit_buffer(bytes(image_color_resized_debug), colorfmt="rgba", bufferfmt="ubyte")
+                        """
                         with self.left_eye_image_dbg.canvas:
-                            Rectangle(texture=texture, pos=self.left_eye_image_dbg.pos, size=(200, 200))
+                            Rectangle(texture=left_eye_texture, pos=self.left_eye_image_dbg.pos, size=(200, 200))
 
                     # image_prediction = blink.get_prediction(self.model, image_color_resized)
 
-                    input_data = np.float32(image_color_resized)
+                    # input_data = np.float32(image_color_resized)
                     # input_data = image_color_resized
-                    input_data = np.array([input_data])  # Convert single image to a batch
+                    # input_data = np.array([input_data])  # Convert single image to a batch
 
+                    """
                     # *** TensorflowLite
                     if platform == "macosx" or platform == "android":
                         begin_tensorflow = datetime.now()  # Para marcar o tempo do tensorflow
@@ -732,8 +750,11 @@ class BlinkApp(MDApp):
 
                         # teste_tflite_output = self.model.pred(input_data)
                         # teste_tflite_output = output['index']
-                        logger.debug("teste tflite output: {}".format(teste_tflite_output))
+                        logger.debug("tflite output_tensor: {}".format(teste_tflite_output))
                     ###
+                    """
+
+                    openess_eye_prediction = self.tensorflow_model.get_openess_eye_prediction(left_eye_img)
 
                     if self.analise_iniciada:
                         if self.ultima_analise.dados_frames is None:
@@ -744,7 +765,7 @@ class BlinkApp(MDApp):
                             self.ultima_analise.dados_frames.append(dados_frame_atual)
 
                     if self.DEBUG_EYES:
-                        self.left_eye_label_dbg.text = "Open" if output_tensor[1] > output_tensor[0] else "Closed"
+                        self.left_eye_label_dbg.text = openess_eye_prediction
 
         # Desenha os retângulos da face e dos olhos no canvas
         if platform == "macosx" or platform == "android":
@@ -837,7 +858,7 @@ class BlinkApp(MDApp):
         # Calcula o x,y central dos olhos
         _ex = ex + ew / 2
         _ey = ey + eh / 2
-        logger.info("_xr:{} _xl:{} _y:{} _w:{} _h:{} / _ex:{} _ey:{}".format(_xr, _xl, _y, _w, _h, _ex, _ey))
+        logger.debug("_xr:{} _xl:{} _y:{} _w:{} _h:{} / _ex:{} _ey:{}".format(_xr, _xl, _y, _w, _h, _ex, _ey))
         if(_ex < (_xr + _w)) and (_ex > _xr) and (_ey < (_y + _h)) and (_ey > _y):
             return self.Eyes.RIGHT
         # elif (_ex < (_xl + _w)) and (_ex > _xl) and (_ey < (_y + _h)) and (_ey > _y):

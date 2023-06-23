@@ -26,14 +26,40 @@ class TensorflowModel:
 
     def __init__(self, **kwargs):
         if platform == "macosx" or platform == "android":
-            self.interpreter = Interpreter(model_path="assets/Blink_YOLOv5_v2_best-fp16.tflite")
-            self.interpreter.allocate_tensors()
-            input_details = self.interpreter.get_input_details()[0]
+            self.yolo_interpreter = Interpreter(model_path="assets/Blink_YOLOv5_v2_best-fp16.tflite")
+            self.yolo_interpreter.allocate_tensors()
+            input_details = self.yolo_interpreter.get_input_details()[0]
             logger.info("yolo - input_tensor.shape: {}".format(input_details['shape']))
             logger.info("yolo - input_tensor.quantization_parameters: {}".format(input_details['quantization_parameters']))
             logger.info("yolo - input_tensor.quantization_parameters.scales: {}".
                         format(input_details['quantization_parameters']['scales']))
             # logger.info("input_tensor.quantization_parameters: {}".format(input['quantization_parameters']))
+
+            self.cnn_interpreter = Interpreter(model_path="assets/talking_300W_v2_50_epoch.tflite")
+            self.cnn_interpreter.allocate_tensors()
+
+    def get_openess_eye_prediction(self, eye_image):
+        eye_image_resized = cv2.resize(eye_image, (32, 32))
+        input_data = np.float32(eye_image_resized)
+        input_data = np.array([input_data])  # Convert single image to a batch
+
+        # *** TensorflowLite
+        if platform == "macosx" or platform == "android":
+            output = self.cnn_interpreter.get_output_details()[0]
+            input_details = self.cnn_interpreter.get_input_details()[0]
+            self.cnn_interpreter.set_tensor(input_details['index'], input_data)
+            self.cnn_interpreter.invoke()
+            output_tensor = self.cnn_interpreter.get_tensor(output['index'])
+            output_tensor = np.squeeze(output_tensor)
+
+            logger.debug("teste tflite output :{}".format(output_tensor))
+
+            if output_tensor[1] > output_tensor[0]:
+                return "open"
+            else:
+                return "closed"
+        else:
+            return "platform_error"
 
     def get_eyes_coordinates(self, pixel_array):
         logger.info("yolo - len(pixel_array): {} min: {} max: {}".format(len(pixel_array), np.min(pixel_array),
