@@ -31,7 +31,7 @@ ScrollView:
             text_size: self.width, None
             padding: 10, 10
             text:
-                "O Blink é um aplicativo para dispositivos móveis que monitora a condição de pacientes que sofrem" +\
+                "O Blink é um aplicativo para dispositivos móveis que monitora a condição de pacientes que sofrem " +\
                 "de blefaroespasmo através da avaliação da frequência das piscadas do paciente. \\n\\n" +\
                 "Ele foi desenvolvido para a disciplina Desenvolvimento de Aplicativos para Inovação Tecnológica " +\
                 "do programa de Mestrado Profissional em Inovação Tecnológica do Instituto de Ciência e Tecnologia " +\

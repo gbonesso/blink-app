@@ -153,6 +153,8 @@ class BlinkApp(MDApp):
     camera_display_widget = ObjectProperty()
     navigation_drawer = ObjectProperty()
     screen_manager = ObjectProperty()
+    app_bar = ObjectProperty()
+    screen_01 = ObjectProperty()
     screen_02 = ObjectProperty()
     root = ObjectProperty()
 
@@ -319,7 +321,7 @@ class BlinkApp(MDApp):
 
         self.root = MDScreen(name="root")
 
-        app_bar = MDTopAppBar(
+        self.app_bar = MDTopAppBar(
             title='Blink',
             pos_hint={'top': 1},
             left_action_items=[['menu', lambda x: self.navigation_drawer.set_state('open')]],
@@ -334,32 +336,13 @@ class BlinkApp(MDApp):
             radius=(0, 16, 16, 0),
         )
 
-        logger.info("platform: {}".format(platform))
-        if platform == "android":
-            self.camera_display_widget = CameraDisplayWidget(
-                size_hint_y=None,
-                height=Window.height - app_bar.height - dp(40),
-                width=Window.width,
-                y=dp(20)
-            )
-        elif platform == "macosx":
-            self.camera_display_widget = camera_desktop.CameraDisplayWidget(
-                size_hint_y=None,
-                height=Window.height - app_bar.height - dp(40),
-                width=Window.width,
-                y=dp(20)
-            )
-
-        logger.info('*** cdw size: {}'.format(self.camera_display_widget.size))
-
         navigation_layout = MDNavigationLayout()
         self.screen_manager = MDScreenManager()
 
         # Tela de nova análise
-        screen_01 = MDScreen(name="screen_01")
+        self.screen_01 = MDScreen(name="screen_01")
 
         # screen_01.add_widget(app_bar)
-        screen_01.add_widget(self.camera_display_widget)
 
         # Widget para sobrepor a imagem e desenhar os retangulos de detecção no cado do Android
         self.canvas_widget = Widget(
@@ -368,7 +351,7 @@ class BlinkApp(MDApp):
             # opacity=0,
         )
         # self.root.add_widget(self.canvas_widget)
-        screen_01.add_widget(self.canvas_widget)
+        self.screen_01.add_widget(self.canvas_widget)
 
         # Tela inicial
         screen_00 = TelaInicial(
@@ -424,7 +407,7 @@ class BlinkApp(MDApp):
         screen_07.main_app = self
         self.screen_manager.add_widget(screen_07)
 
-        self.screen_manager.add_widget(screen_01)
+        self.screen_manager.add_widget(self.screen_01)
         navigation_layout.add_widget(self.screen_manager)
 
         navigation_layout.add_widget(self.navigation_drawer)
@@ -452,9 +435,7 @@ class BlinkApp(MDApp):
 
         Clock.schedule_interval(self.update, 0)
 
-        self.root.add_widget(app_bar)
-
-
+        self.root.add_widget(self.app_bar)
 
         # Imagem do olho para debug...
         if self.DEBUG_EYES:
@@ -465,14 +446,37 @@ class BlinkApp(MDApp):
     # on_start é executado após o build()
     # ToDo: Ainda tenho que descobrir como deixar a camera frontal como padrão no Android
     def on_start(self):
+        logger.debug("platform: {}".format(platform))
+        #
         if platform == "android":
+            self.camera_display_widget = CameraDisplayWidget(
+                size_hint_y=None,
+                height=Window.height - self.app_bar.height - dp(40),
+                width=Window.width,
+                y=dp(20)
+            )
+        elif platform == "macosx":
+            self.camera_display_widget = camera_desktop.CameraDisplayWidget(
+                size_hint_y=None,
+                height=Window.height - self.app_bar.height - dp(40),
+                width=Window.width,
+                y=dp(20)
+            )
+        self.screen_01.add_widget(
+            self.camera_display_widget,
+            index=100,  # Z-index, will be drawn under the others widgets
+        )
+
+        logger.info('*** cdw size: {}'.format(self.camera_display_widget.size))
+        """if platform == "android":
             # self.camera_display_widget.restart_stream()
-            Clock.schedule_once(self.flip_camera_button_press, 1)
-            Clock.schedule_once(self.flip_camera_button_press, 3)
-            Clock.schedule_once(self.flip_camera_button_press, 5)
+            # Clock.schedule_once(self.flip_camera_button_press, 1)
+            # Clock.schedule_once(self.flip_camera_button_press, 3)
+            # Clock.schedule_once(self.flip_camera_button_press, 5)
 
             # self.camera_display_widget.rotate_cameras()
             # self.camera_display_widget.rotate_cameras()
+        """
 
     def flip_camera_button_press(self, button):
         self.camera_display_widget.rotate_cameras()
