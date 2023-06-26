@@ -176,6 +176,8 @@ class BlinkApp(MDApp):
 
     # Controle de status
     analise_iniciada = False
+    running_eyes_detection = False
+    running_face_detection = False
 
     # TensorflowLite Interpreter
     interpreter = ObjectProperty()
@@ -573,6 +575,13 @@ class BlinkApp(MDApp):
             # pixel_array = self.pre_process_image(pixel_array)
             gray = cv2.cvtColor(pixel_array, cv2.COLOR_BGR2GRAY)
             # logger.info('*** gray: {}'.format(gray))
+
+            if not self.running_face_detection:
+                # Perform face detection in a different Thread, trying to speed up FPS
+                Clock.schedule_once(partial(self.run_face_detection, gray, self.min_neighbors_face, self.min_size_face),
+                                    0,
+                                    )
+            """
             begin = datetime.now()
             min_size_face = self.min_size_face
             min_neighbors_face = self.min_neighbors_face
@@ -584,10 +593,18 @@ class BlinkApp(MDApp):
                 flags=cv2.CASCADE_SCALE_IMAGE,
             )
             logger.info('*** Tempo faceCascade: {} #faces:{} '.format(datetime.now() - begin, len(faces)))
-            for (x, y, w, h) in faces:
+            """
+
+            # for (x, y, w, h) in faces:
+            if self.face_rect is not None:
+                x = self.face_rect[0]
+                y = self.face_rect[1]
+                w = self.face_rect[2]
+                h = self.face_rect[3]
+
                 logger.info('*** x:{} y:{}, w:{}, h:{}'.format(x, y, w, h))
-                y = y + int(h/8)
-                self.face_rect = (x, y, w, int(h/2))  # h/3 -> Elimina a metade da boca...
+                #y = y + int(h/8)
+                #self.face_rect = (x, y, w, int(h/2))  # h/3 -> Elimina a metade da boca...
 
                 # Cria uma imagem recortada somente da face para acelerar o processo de detecção dos olhos
                 face_img_rgba = pixel_array_rgba[
@@ -602,8 +619,8 @@ class BlinkApp(MDApp):
                 min_size_eyes = self.min_size_eyes
                 min_neighbors_eyes = self.min_neighbors_eyes
 
-                if self.current_frame % 1 == 0:
-                    # Perform eye detection each 3 frames, to speed up FPS
+                if not self.running_eyes_detection:
+                    # Perform eye detection in a different Thread, trying to speed up FPS
                     Clock.schedule_once(partial(self.run_eyes_detection, face_gray, min_neighbors_eyes, min_size_eyes,
                                                 self.face_rect),
                                         0,
@@ -824,7 +841,24 @@ class BlinkApp(MDApp):
         logger.info('*** Tempo total update: {}'.format(datetime.now() - begin_update))
         # logger.info("***Updating Canvas...")
 
+    def run_face_detection(self, image, min_neighbors_face, min_size_face, dt):
+        self.running_face_detection = True
+        begin = datetime.now()
+        faces = faceCascade.detectMultiScale(
+            image,
+            scaleFactor=1.1,
+            minNeighbors=min_neighbors_face,
+            minSize=(min_size_face, min_size_face),
+            flags=cv2.CASCADE_SCALE_IMAGE,
+        )
+        for (x, y, w, h) in faces:
+            y = y + int(h / 8)
+            self.face_rect = (x, y, w, int(h/2))  # h/3 -> Elimina a metade da boca...
+        logger.info('*** Tempo faceCascade: {} #faces:{} '.format(datetime.now() - begin, len(faces)))
+        self.running_face_detection = False
+
     def run_eyes_detection(self, image, min_neighbors_eyes, min_size, face_rect, dt):
+        self.running_eyes_detection = True
         logger.debug("run_eyes_detection - image: {} dt: {}".format(image, dt))
         begin = datetime.now()
         eyes = eyeCascade.detectMultiScale(
@@ -859,6 +893,8 @@ class BlinkApp(MDApp):
             elif which_eye == self.Eyes.RIGHT:
                 # self.right_eye_rect = (ex, ey, ew, eh)
                 self.right_eye_rect = (x + ex, y + ey, ew, eh)
+
+        self.running_eyes_detection = False
 
     def create_group_instructions_rect(self, cdw, rect, color):
         # O y deve ser ajustado, no canvas a origem (0,0) é no canto inferior esquerdo. As coordenadas
