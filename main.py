@@ -7,6 +7,7 @@ import cv2
 import os.path
 from datetime import datetime
 from functools import partial
+import threading
 
 # Kivy imports...
 from kivy.uix.boxlayout import BoxLayout
@@ -550,8 +551,8 @@ class BlinkApp(MDApp):
         self.root.canvas.ask_update()
 
         img = self.camera_display_widget.export_as_image()
-        # logger.info('*** img: {}'.format(img))
-        logger.info("self.min_size_face: {}".format(self.min_size_face))
+        logger.debug('*** img: {}'.format(img))
+        logger.debug("self.min_size_face: {}".format(self.min_size_face))
 
         if img is not None:
             # texture.pixels have the RGBA data
@@ -572,39 +573,28 @@ class BlinkApp(MDApp):
 
             # logger.info('*** pixel_array: {}'.format(pixel_array))
             # Aumenta o contraste...
+            # ToDo: Explore the pre-processing possibilities.
             # pixel_array = self.pre_process_image(pixel_array)
             gray = cv2.cvtColor(pixel_array, cv2.COLOR_BGR2GRAY)
-            # logger.info('*** gray: {}'.format(gray))
+            logger.debug('*** gray: {}'.format(gray))
 
             if not self.running_face_detection:
                 # Perform face detection in a different Thread, trying to speed up FPS
-                Clock.schedule_once(partial(self.run_face_detection, gray, self.min_neighbors_face, self.min_size_face),
-                                    0,
-                                    )
-            """
-            begin = datetime.now()
-            min_size_face = self.min_size_face
-            min_neighbors_face = self.min_neighbors_face
-            faces = faceCascade.detectMultiScale(
-                gray,
-                scaleFactor=1.1,
-                minNeighbors=min_neighbors_face,
-                minSize=(min_size_face, min_size_face),
-                flags=cv2.CASCADE_SCALE_IMAGE,
-            )
-            logger.info('*** Tempo faceCascade: {} #faces:{} '.format(datetime.now() - begin, len(faces)))
-            """
+                threading.Thread(
+                    target=self.run_face_detection,
+                    args=(gray, self.min_neighbors_face, self.min_size_face,)).start()
+                # Clock.schedule_once(partial(self.run_face_detection, gray, self.min_neighbors_face, self.min_size_face),
+                #                    0,
+                #                    )
 
-            # for (x, y, w, h) in faces:
+            # If a face is already detected...
             if self.face_rect is not None:
                 x = self.face_rect[0]
                 y = self.face_rect[1]
                 w = self.face_rect[2]
                 h = self.face_rect[3]
 
-                logger.info('*** x:{} y:{}, w:{}, h:{}'.format(x, y, w, h))
-                #y = y + int(h/8)
-                #self.face_rect = (x, y, w, int(h/2))  # h/3 -> Elimina a metade da boca...
+                logger.debug('*** x:{} y:{}, w:{}, h:{}'.format(x, y, w, h))
 
                 # Cria uma imagem recortada somente da face para acelerar o processo de detecção dos olhos
                 face_img_rgba = pixel_array_rgba[
@@ -621,10 +611,13 @@ class BlinkApp(MDApp):
 
                 if not self.running_eyes_detection:
                     # Perform eye detection in a different Thread, trying to speed up FPS
-                    Clock.schedule_once(partial(self.run_eyes_detection, face_gray, min_neighbors_eyes, min_size_eyes,
-                                                self.face_rect),
-                                        0,
-                                        )
+                    threading.Thread(
+                        target=self.run_eyes_detection,
+                        args=(face_gray, min_neighbors_eyes, min_size_eyes, self.face_rect)).start()
+                    # Clock.schedule_once(partial(self.run_eyes_detection, face_gray, min_neighbors_eyes, min_size_eyes,
+                    #                            self.face_rect),
+                    #                    0,
+                    #                    )
                     """
                     begin = datetime.now()
                     eyes = eyeCascade.detectMultiScale(
@@ -841,7 +834,7 @@ class BlinkApp(MDApp):
         logger.info('*** Tempo total update: {}'.format(datetime.now() - begin_update))
         # logger.info("***Updating Canvas...")
 
-    def run_face_detection(self, image, min_neighbors_face, min_size_face, dt):
+    def run_face_detection(self, image, min_neighbors_face, min_size_face):
         self.running_face_detection = True
         begin = datetime.now()
         faces = faceCascade.detectMultiScale(
@@ -857,9 +850,9 @@ class BlinkApp(MDApp):
         logger.info('*** Tempo faceCascade: {} #faces:{} '.format(datetime.now() - begin, len(faces)))
         self.running_face_detection = False
 
-    def run_eyes_detection(self, image, min_neighbors_eyes, min_size, face_rect, dt):
+    def run_eyes_detection(self, image, min_neighbors_eyes, min_size, face_rect):
         self.running_eyes_detection = True
-        logger.debug("run_eyes_detection - image: {} dt: {}".format(image, dt))
+        logger.debug("run_eyes_detection - image: {}".format(image))
         begin = datetime.now()
         eyes = eyeCascade.detectMultiScale(
             # gray,
