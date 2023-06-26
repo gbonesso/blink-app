@@ -576,7 +576,9 @@ class BlinkApp(MDApp):
             # Aumenta o contraste...
             # ToDo: Explore the pre-processing possibilities.
             # pixel_array = self.pre_process_image(pixel_array)
+            begin_gray_convertion = datetime.now()
             gray = cv2.cvtColor(pixel_array, cv2.COLOR_BGR2GRAY)
+            logger.info('*** Tempo : cvtColor {}'.format(datetime.now() - begin_gray_convertion))
             logger.debug('*** gray: {}'.format(gray))
 
             if not self.running_face_detection:
@@ -584,9 +586,6 @@ class BlinkApp(MDApp):
                 threading.Thread(
                     target=self.run_face_detection,
                     args=(gray, self.min_neighbors_face, self.min_size_face,)).start()
-                # Clock.schedule_once(partial(self.run_face_detection, gray, self.min_neighbors_face, self.min_size_face),
-                #                    0,
-                #                    )
 
             # If a face is already detected...
             if self.face_rect is not None:
@@ -615,39 +614,6 @@ class BlinkApp(MDApp):
                     threading.Thread(
                         target=self.run_eyes_detection,
                         args=(face_gray, min_neighbors_eyes, min_size_eyes, self.face_rect)).start()
-                    # Clock.schedule_once(partial(self.run_eyes_detection, face_gray, min_neighbors_eyes, min_size_eyes,
-                    #                            self.face_rect),
-                    #                    0,
-                    #                    )
-                    """
-                    begin = datetime.now()
-                    eyes = eyeCascade.detectMultiScale(
-                        # gray,
-                        face_gray,
-                        scaleFactor=1.02,  # Não precisa escalar muito, a distância da selfie não varia muito...
-                        minNeighbors=min_neighbors_eyes,  # Valores maiores fazem menos detecções mais precisas
-                        # 5 não estava detectando olho direito...
-                        minSize=(min_size_eyes, min_size_eyes),
-                        flags=cv2.CASCADE_SCALE_IMAGE,
-                    )
-                    logger.info('*** Tempo eyeCascade: {} #eyes:{} '.format(datetime.now() - begin, len(eyes)))
-
-                    for (ex, ey, ew, eh) in eyes:
-                        logger.info('*** eyes - ex:{} ey:{}, ew:{}, eh:{}'.format(ex, ey, ew, eh))
-                        # which_eye = self.get_eye(x, y, w, h, ex, ey, ew, eh)
-                        # Na imagem da face recortada a posição relativa da imagem é zero...
-                        which_eye = self.get_eye(0, 0, w, h, ex, ey, ew, eh)
-                        logger.info("which_eye: {}".format(which_eye))
-                        # ey_ajustado = float(img.height / 2 - eh - ey)
-
-                        if which_eye == self.Eyes.LEFT:
-                            # self.left_eye_rect = (ex, ey, ew, eh)
-                            self.left_eye_rect = (x + ex, y + ey, ew, eh)
-
-                        elif which_eye == self.Eyes.RIGHT:
-                            # self.right_eye_rect = (ex, ey, ew, eh)
-                            self.right_eye_rect = (x + ex, y + ey, ew, eh)
-                    """
 
                 # Registra frame
                 if self.analise_iniciada:
@@ -669,52 +635,14 @@ class BlinkApp(MDApp):
                         self.right_eye_rect[1]:self.right_eye_rect[1] + self.right_eye_rect[3],
                         self.right_eye_rect[0]:self.right_eye_rect[0] + self.right_eye_rect[2]
                     ]
-                    # image_color_resized = cv2.resize(right_eye_img, (32, 32))
-                    # logger.debug("pixel_array.shape: {} image_color_resized.shape {} right_eye_img.shape {}".format(
-                    #    pixel_array.shape, image_color_resized.shape, right_eye_img.shape))
 
                     # *** Cria imagem para debug...
                     if self.DEBUG_EYES:
                         right_eye_texture = get_texture_from_rgba_array(
                             pixel_array_rgba, self.right_eye_rect, (200, 200))
-                        """
-                        right_eye_img_rgba = pixel_array_rgba[
-                            self.right_eye_rect[1]:self.right_eye_rect[1] + self.right_eye_rect[3],
-                            self.right_eye_rect[0]:self.right_eye_rect[0] + self.right_eye_rect[2]
-                        ]
-                        image_color_resized_debug = cv2.resize(right_eye_img_rgba, (200, 200))
-                        texture = Texture.create(size=(200, 200))
-                        texture.blit_buffer(bytes(image_color_resized_debug), colorfmt="rgba", bufferfmt="ubyte")
-                        """
+
                         with self.right_eye_image_dbg.canvas:
                             Rectangle(texture=right_eye_texture, pos=self.right_eye_image_dbg.pos, size=(200, 200))
-
-                    # image_prediction = blink.get_prediction(self.model, image_color_resized)
-
-                    # input_data = np.float32(image_color_resized)
-                    # input_data = np.array([input_data])  # Convert single image to a batch
-
-                    """
-                    # *** TensorflowLite
-                    if platform == "macosx" or platform == "android":
-                        output = self.interpreter.get_output_details()[0]
-                        input_details = self.interpreter.get_input_details()[0]
-                        self.interpreter.set_tensor(input_details['index'], input_data)
-                        self.interpreter.invoke()
-                        output_tensor = self.interpreter.get_tensor(output['index'])
-                        output_tensor = np.squeeze(output_tensor)
-
-                        
-
-                        teste_tflite_output = "tflite output: {}".format(
-                            output_tensor,
-                        )
-
-                        # teste_tflite_output = self.model.pred(input_data)
-                        # teste_tflite_output = output['index']
-                        logger.debug("teste tflite output :{}".format(teste_tflite_output))
-                    ###
-                    """
 
                     openess_eye_prediction = self.tensorflow_model.get_openess_eye_prediction(right_eye_img)
 
@@ -724,60 +652,18 @@ class BlinkApp(MDApp):
                     if self.DEBUG_EYES:
                         self.right_eye_label_dbg.text = openess_eye_prediction
 
-                # Código repetido, generalizar...
                 if self.left_eye_rect is not None:
                     left_eye_img = pixel_array[
                         self.left_eye_rect[1]:self.left_eye_rect[1] + self.left_eye_rect[3],
                         self.left_eye_rect[0]:self.left_eye_rect[0] + self.left_eye_rect[2]
                     ]
-                    # image_color_resized = cv2.resize(left_eye_img, (32, 32))
-                    # logger.debug("pixel_array.shape: {} image_color_resized.shape {} right_eye_img.shape {}".format(
-                    #    pixel_array.shape, image_color_resized.shape, left_eye_img.shape))
 
                     # Cria imagem para debug...
                     if self.DEBUG_EYES:
                         left_eye_texture = get_texture_from_rgba_array(
                             pixel_array_rgba, self.left_eye_rect, (200, 200))
-                        """
-                        left_eye_img_rgba = pixel_array_rgba[
-                            self.left_eye_rect[1]:self.left_eye_rect[1] + self.left_eye_rect[3],
-                            self.left_eye_rect[0]:self.left_eye_rect[0] + self.left_eye_rect[2]
-                        ]
-                        image_color_resized_debug = cv2.resize(left_eye_img_rgba, (200, 200))
-                        texture = Texture.create(size=(200, 200))
-                        texture.blit_buffer(bytes(image_color_resized_debug), colorfmt="rgba", bufferfmt="ubyte")
-                        """
                         with self.left_eye_image_dbg.canvas:
                             Rectangle(texture=left_eye_texture, pos=self.left_eye_image_dbg.pos, size=(200, 200))
-
-                    # image_prediction = blink.get_prediction(self.model, image_color_resized)
-
-                    # input_data = np.float32(image_color_resized)
-                    # input_data = image_color_resized
-                    # input_data = np.array([input_data])  # Convert single image to a batch
-
-                    """
-                    # *** TensorflowLite
-                    if platform == "macosx" or platform == "android":
-                        begin_tensorflow = datetime.now()  # Para marcar o tempo do tensorflow
-                        output = self.interpreter.get_output_details()[0]
-                        input = self.interpreter.get_input_details()[0]
-                        self.interpreter.set_tensor(input['index'], input_data)
-                        self.interpreter.invoke()
-                        output_tensor = self.interpreter.get_tensor(output['index'])
-                        output_tensor = np.squeeze(output_tensor)
-                        logger.info('*** Tempo tensorflow (1 olho): {}'.format(datetime.now() - begin_tensorflow))
-
-                        if self.analise_iniciada:
-                            dados_frame_atual.olho_esquerdo_aberto = 1 if output_tensor[1] > output_tensor[0] else 0
-
-                        teste_tflite_output = "tflite output: {}".format(output_tensor)
-
-                        # teste_tflite_output = self.model.pred(input_data)
-                        # teste_tflite_output = output['index']
-                        logger.debug("tflite output_tensor: {}".format(teste_tflite_output))
-                    ###
-                    """
 
                     openess_eye_prediction = self.tensorflow_model.get_openess_eye_prediction(left_eye_img)
 
@@ -796,6 +682,7 @@ class BlinkApp(MDApp):
                         self.ultima_analise.dados_frames.append(dados_frame_atual)
 
         # Desenha os retângulos da face e dos olhos no canvas
+        begin_update_canvas = datetime.now()
         if platform == "macosx" or platform == "android":
             if self.instruction_group is not None:
                 # if platform == "macosx":
@@ -831,6 +718,7 @@ class BlinkApp(MDApp):
             # if platform == "macosx":
             # self.camera_display_widget.canvas.add(self.instruction_group)
             self.canvas_widget.canvas.add(self.instruction_group)
+            logger.info('*** Tempo update canvas: {}'.format(datetime.now() - begin_update_canvas))
 
         logger.info('*** Tempo total update: {}'.format(datetime.now() - begin_update))
         # logger.info("***Updating Canvas...")
@@ -850,7 +738,7 @@ class BlinkApp(MDApp):
             self.face_rect = (x, y, w, int(h/2))  # h/3 -> Elimina a metade da boca...
         logger.info('*** Tempo faceCascade: {} #faces:{} '.format(datetime.now() - begin, len(faces)))
         if platform == "android":
-            sleep(0.2)  # There is no need to update faces too frequently. Helps to improve FPS
+            sleep(0.3)  # There is no need to update faces too frequently. Helps to improve FPS
         self.running_face_detection = False
 
     def run_eyes_detection(self, image, min_neighbors_eyes, min_size, face_rect):
@@ -876,22 +764,18 @@ class BlinkApp(MDApp):
         h = face_rect[3] * 2
         for (ex, ey, ew, eh) in eyes:
             logger.info('*** eyes - ex:{} ey:{}, ew:{}, eh:{}'.format(ex, ey, ew, eh))
-            # which_eye = self.get_eye(x, y, w, h, ex, ey, ew, eh)
             # Na imagem da face recortada a posição relativa da imagem é zero...
             which_eye = self.get_eye(0, 0, w, h, ex, ey, ew, eh)
             logger.info("which_eye: {}".format(which_eye))
-            # ey_ajustado = float(img.height / 2 - eh - ey)
 
             if which_eye == self.Eyes.LEFT:
-                # self.left_eye_rect = (ex, ey, ew, eh)
                 self.left_eye_rect = (x + ex, y + ey, ew, eh)
 
             elif which_eye == self.Eyes.RIGHT:
-                # self.right_eye_rect = (ex, ey, ew, eh)
                 self.right_eye_rect = (x + ex, y + ey, ew, eh)
 
         if platform == "android":
-            sleep(0.1)  # Update eyes less frequently. Helps to improve FPS
+            sleep(0.2)  # Update eyes less frequently. Helps to improve FPS
         self.running_eyes_detection = False
 
     def create_group_instructions_rect(self, cdw, rect, color):
