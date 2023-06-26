@@ -764,15 +764,18 @@ class BlinkApp(MDApp):
                     openess_eye_prediction = self.tensorflow_model.get_openess_eye_prediction(left_eye_img)
 
                     if self.analise_iniciada:
-                        if self.ultima_analise.dados_frames is None:
-                            # Primeiro frame...
-                            self.ultima_analise.dados_frames = []
-                            self.ultima_analise.dados_frames.append(dados_frame_atual)
-                        else:
-                            self.ultima_analise.dados_frames.append(dados_frame_atual)
+                        dados_frame_atual.olho_esquerdo_aberto = 1 if openess_eye_prediction == "open" else 0
 
                     if self.DEBUG_EYES:
                         self.left_eye_label_dbg.text = openess_eye_prediction
+
+                if self.analise_iniciada:
+                    if self.ultima_analise.dados_frames is None:
+                        # Primeiro frame...
+                        self.ultima_analise.dados_frames = []
+                        self.ultima_analise.dados_frames.append(dados_frame_atual)
+                    else:
+                        self.ultima_analise.dados_frames.append(dados_frame_atual)
 
         # Desenha os retângulos da face e dos olhos no canvas
         if platform == "macosx" or platform == "android":
