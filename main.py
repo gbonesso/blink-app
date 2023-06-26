@@ -6,6 +6,7 @@ import numpy as np
 import cv2
 import os.path
 from datetime import datetime
+from functools import partial
 
 # Kivy imports...
 from kivy.uix.boxlayout import BoxLayout
@@ -602,7 +603,12 @@ class BlinkApp(MDApp):
                 min_neighbors_eyes = self.min_neighbors_eyes
 
                 if self.current_frame % 3 == 0:
-                    # Perform eye detection eac 3 frames, to speed up FPS
+                    # Perform eye detection each 3 frames, to speed up FPS
+                    Clock.schedule_once(partial(self.run_eyes_detection, face_gray, min_neighbors_eyes, min_size_eyes,
+                                                self.face_rect),
+                                        0,
+                                        )
+                    """
                     begin = datetime.now()
                     eyes = eyeCascade.detectMultiScale(
                         # gray,
@@ -630,6 +636,7 @@ class BlinkApp(MDApp):
                         elif which_eye == self.Eyes.RIGHT:
                             # self.right_eye_rect = (ex, ey, ew, eh)
                             self.right_eye_rect = (x + ex, y + ey, ew, eh)
+                    """
 
                 # Registra frame
                 if self.analise_iniciada:
@@ -816,6 +823,42 @@ class BlinkApp(MDApp):
 
         logger.info('*** Tempo total update: {}'.format(datetime.now() - begin_update))
         # logger.info("***Updating Canvas...")
+
+    def run_eyes_detection(self, image, min_neighbors_eyes, min_size, face_rect, dt):
+        logger.debug("run_eyes_detection - image: {} dt: {}".format(image, dt))
+        begin = datetime.now()
+        eyes = eyeCascade.detectMultiScale(
+            # gray,
+            # face_gray,
+            image,
+            scaleFactor=1.10,  # Não precisa escalar muito, a distância da selfie não varia muito... 1.02
+            minNeighbors=min_neighbors_eyes,  # Valores maiores fazem menos detecções mais precisas
+            # 5 não estava detectando olho direito...
+            # minSize=(min_size_eyes, min_size_eyes),
+            minSize=(min_size, min_size),
+            flags=cv2.CASCADE_SCALE_IMAGE,
+        )
+        logger.info('*** Tempo eyeCascade: {} #eyes:{} '.format(datetime.now() - begin, len(eyes)))
+
+        x = face_rect[0]
+        y = face_rect[1]
+        w = face_rect[2]
+        h = face_rect[3] * 2
+        for (ex, ey, ew, eh) in eyes:
+            logger.info('*** eyes - ex:{} ey:{}, ew:{}, eh:{}'.format(ex, ey, ew, eh))
+            # which_eye = self.get_eye(x, y, w, h, ex, ey, ew, eh)
+            # Na imagem da face recortada a posição relativa da imagem é zero...
+            which_eye = self.get_eye(0, 0, w, h, ex, ey, ew, eh)
+            logger.info("which_eye: {}".format(which_eye))
+            # ey_ajustado = float(img.height / 2 - eh - ey)
+
+            if which_eye == self.Eyes.LEFT:
+                # self.left_eye_rect = (ex, ey, ew, eh)
+                self.left_eye_rect = (x + ex, y + ey, ew, eh)
+
+            elif which_eye == self.Eyes.RIGHT:
+                # self.right_eye_rect = (ex, ey, ew, eh)
+                self.right_eye_rect = (x + ex, y + ey, ew, eh)
 
     def create_group_instructions_rect(self, cdw, rect, color):
         # O y deve ser ajustado, no canvas a origem (0,0) é no canto inferior esquerdo. As coordenadas
