@@ -161,6 +161,8 @@ class BlinkApp(MDApp):
     screen_02 = ObjectProperty()
     root = ObjectProperty()
 
+    current_frame = 0
+
     menu = ObjectProperty()
     content_navigation_drawer = ObjectProperty()
     flip_camera_button = ObjectProperty()
@@ -539,6 +541,7 @@ class BlinkApp(MDApp):
         if self.screen_manager.current != "screen_01":
             return
 
+        self.current_frame += 1
         begin_update = datetime.now()  # Para medir o tempo total do update
 
         self.root.canvas.ask_update()
@@ -558,10 +561,11 @@ class BlinkApp(MDApp):
             pixel_array = pixel_array_rgba[:, :, :3]  # Elimina o canal alpha
             logger.debug("pixel_array_shape (after reshape): {}".format(pixel_array.shape))
 
-            # Get eyes coordinates via YOLO model
+            # *** Get eyes coordinates via YOLO model
             begin_yolo = datetime.now()
             # self.tensorflow_model.get_eyes_coordinates(pixel_array)
             logger.info('*** Tempo yolo: {}'.format(datetime.now() - begin_yolo))
+            # ***
 
             # logger.info('*** pixel_array: {}'.format(pixel_array))
             # Aumenta o contraste...
@@ -596,16 +600,36 @@ class BlinkApp(MDApp):
                 # ToDo: Colocar scaleFactor nas configurações
                 min_size_eyes = self.min_size_eyes
                 min_neighbors_eyes = self.min_neighbors_eyes
-                begin = datetime.now()
-                eyes = eyeCascade.detectMultiScale(
-                    # gray,
-                    face_gray,
-                    scaleFactor=1.02,  # Não precisa escalar muito, a distância da selfie não varia muito...
-                    minNeighbors=min_neighbors_eyes,  # Valores maiores fazem menos detecções mais precisas
-                    # 5 não estava detectando olho direito...
-                    minSize=(min_size_eyes, min_size_eyes),
-                    flags=cv2.CASCADE_SCALE_IMAGE,
-                )
+
+                if self.current_frame % 3 == 0:
+                    # Perform eye detection eac 3 frames, to speed up FPS
+                    begin = datetime.now()
+                    eyes = eyeCascade.detectMultiScale(
+                        # gray,
+                        face_gray,
+                        scaleFactor=1.02,  # Não precisa escalar muito, a distância da selfie não varia muito...
+                        minNeighbors=min_neighbors_eyes,  # Valores maiores fazem menos detecções mais precisas
+                        # 5 não estava detectando olho direito...
+                        minSize=(min_size_eyes, min_size_eyes),
+                        flags=cv2.CASCADE_SCALE_IMAGE,
+                    )
+                    logger.info('*** Tempo eyeCascade: {} #eyes:{} '.format(datetime.now() - begin, len(eyes)))
+
+                    for (ex, ey, ew, eh) in eyes:
+                        logger.info('*** eyes - ex:{} ey:{}, ew:{}, eh:{}'.format(ex, ey, ew, eh))
+                        # which_eye = self.get_eye(x, y, w, h, ex, ey, ew, eh)
+                        # Na imagem da face recortada a posição relativa da imagem é zero...
+                        which_eye = self.get_eye(0, 0, w, h, ex, ey, ew, eh)
+                        logger.info("which_eye: {}".format(which_eye))
+                        # ey_ajustado = float(img.height / 2 - eh - ey)
+
+                        if which_eye == self.Eyes.LEFT:
+                            # self.left_eye_rect = (ex, ey, ew, eh)
+                            self.left_eye_rect = (x + ex, y + ey, ew, eh)
+
+                        elif which_eye == self.Eyes.RIGHT:
+                            # self.right_eye_rect = (ex, ey, ew, eh)
+                            self.right_eye_rect = (x + ex, y + ey, ew, eh)
 
                 # Registra frame
                 if self.analise_iniciada:
@@ -616,23 +640,6 @@ class BlinkApp(MDApp):
                             olho_direito_aberto=-1,
                             olho_esquerdo_aberto=-1,
                         )
-
-                logger.info('*** Tempo eyeCascade: {} #eyes:{} '.format(datetime.now() - begin, len(eyes)))
-                for (ex, ey, ew, eh) in eyes:
-                    logger.info('*** eyes - ex:{} ey:{}, ew:{}, eh:{}'.format(ex, ey, ew, eh))
-                    # which_eye = self.get_eye(x, y, w, h, ex, ey, ew, eh)
-                    # Na imagem da face recortada a posição relativa da imagem é zero...
-                    which_eye = self.get_eye(0, 0, w, h, ex, ey, ew, eh)
-                    logger.info("which_eye: {}".format(which_eye))
-                    # ey_ajustado = float(img.height / 2 - eh - ey)
-
-                    if which_eye == self.Eyes.LEFT:
-                        # self.left_eye_rect = (ex, ey, ew, eh)
-                        self.left_eye_rect = (x + ex, y + ey, ew, eh)
-
-                    elif which_eye == self.Eyes.RIGHT:
-                        # self.right_eye_rect = (ex, ey, ew, eh)
-                        self.right_eye_rect = (x + ex, y + ey, ew, eh)
 
                 # Faces e olhos processados para esse frame, fazer a detecção de olhos abertos / fechados
                 # via tensorflow
