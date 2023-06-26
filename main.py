@@ -577,7 +577,8 @@ class BlinkApp(MDApp):
             # ToDo: Explore the pre-processing possibilities.
             # pixel_array = self.pre_process_image(pixel_array)
             begin_gray_convertion = datetime.now()
-            gray = cv2.cvtColor(pixel_array, cv2.COLOR_BGR2GRAY)
+            # gray = cv2.cvtColor(pixel_array, cv2.COLOR_BGR2GRAY)
+            gray = pixel_array
             logger.info('*** Tempo : cvtColor {}'.format(datetime.now() - begin_gray_convertion))
             logger.debug('*** gray: {}'.format(gray))
 
@@ -602,7 +603,8 @@ class BlinkApp(MDApp):
                     self.face_rect[0]:self.face_rect[0] + self.face_rect[2]
                 ]
                 face_img_rgb = face_img_rgba[:, :, :3]  # Elimina o canal alpha
-                face_gray = cv2.cvtColor(face_img_rgb, cv2.COLOR_BGR2GRAY)
+                # face_gray = cv2.cvtColor(face_img_rgb, cv2.COLOR_BGR2GRAY)
+                face_gray = face_img_rgb
 
                 # Tamanho mínimo de detecção. Nas cameras de desktops o tamanho dos olhos é menor
                 # ToDo: Colocar scaleFactor nas configurações
