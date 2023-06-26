@@ -602,7 +602,7 @@ class BlinkApp(MDApp):
                 min_size_eyes = self.min_size_eyes
                 min_neighbors_eyes = self.min_neighbors_eyes
 
-                if self.current_frame % 3 == 0:
+                if self.current_frame % 1 == 0:
                     # Perform eye detection each 3 frames, to speed up FPS
                     Clock.schedule_once(partial(self.run_eyes_detection, face_gray, min_neighbors_eyes, min_size_eyes,
                                                 self.face_rect),
