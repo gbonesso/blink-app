@@ -6,8 +6,9 @@ import numpy as np
 import cv2
 import os.path
 from datetime import datetime
-from functools import partial
+# from functools import partial
 import threading
+from time import sleep
 
 # Kivy imports...
 from kivy.uix.boxlayout import BoxLayout
@@ -848,6 +849,8 @@ class BlinkApp(MDApp):
             y = y + int(h / 8)
             self.face_rect = (x, y, w, int(h/2))  # h/3 -> Elimina a metade da boca...
         logger.info('*** Tempo faceCascade: {} #faces:{} '.format(datetime.now() - begin, len(faces)))
+        if platform == "android":
+            sleep(0.2)  # There is no need to update faces too frequently. Helps to improve FPS
         self.running_face_detection = False
 
     def run_eyes_detection(self, image, min_neighbors_eyes, min_size, face_rect):
@@ -887,6 +890,8 @@ class BlinkApp(MDApp):
                 # self.right_eye_rect = (ex, ey, ew, eh)
                 self.right_eye_rect = (x + ex, y + ey, ew, eh)
 
+        if platform == "android":
+            sleep(0.1)  # Update eyes less frequently. Helps to improve FPS
         self.running_eyes_detection = False
 
     def create_group_instructions_rect(self, cdw, rect, color):
